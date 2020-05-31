@@ -1,7 +1,6 @@
 package template;
 
 import java.io.PrintStream;
-import fun.Palindrome;
 
 import fileIO.ByteFile;
 import fileIO.ByteFile1;
@@ -181,48 +180,74 @@ public class A_SampleBasic {
 	
 	private void processInner(ByteFile bf, ByteStreamWriter bsw){
 		byte[] line=bf.nextLine();
+		byte[] line2=bf.nextLine();
+		byte[] line3=bf.nextLine();
+		byte[] line4=bf.nextLine();
 		ByteBuilder bb=new ByteBuilder();
+		ByteBuilder bb_2=new ByteBuilder();
 		
-		while(line!=null){
+		
+		while(line!=null && line2!=null && line3!=null && line4!=null){
 			if(line.length>0){
+				//linesProcessed++;
 				linesProcessed++;
-				bytesProcessed+=(line.length+1);
+				//linesProcessed++;
+				//linesProcessed++;
+				//bytesProcessed+=(line.length+1);
+				bytesProcessed+=(line2.length+1);
+				//bytesProcessed+=(line3.length+1);
+				//bytesProcessed+=(line4.length+1);
 
 				if(true){
 					linesOut++;
-					bytesOut+=(line.length+1);
-					for(int i=0; i<line.length && line[i]!='\t'; i++){
-						bb.append(line[i]);
-						//seq_blocks++;
-						//seq_lines++;
-						//if(seq_lines==4){loop_block++; seq_lines=0;}
+					//bytesOut+=(line.length+1);
+					bytesOut+=(line2.length+1);
+					//bytesOut+=(line3.length+1);
+					//bytesOut+=(line4.length+1);
+					//bb.append(line);
+					//bb.append("+");
+					bb.append(line2);
+					//bb.append(line3);
+					//bb.append(line4);
+					//for(int i=0; i<line.length && line[i]!='\t'; i++){
+					//	bb.append(line[i]);
+					//}
+					bb.nl();
+					bsw.print(bb);
+					byte[] b=bb.toBytes();
+					int half_len = (b.length / 2);
+					for(int i=0; i<half_len && b[i]!='\t'; i++) {
+						if(b[i]==b[(b.length - 1) - i]){bsw.print(b[i]);bsw.print(i);}
+						//bsw.print(b[(b.length - 1) - i]);
 						
 					}
-					bb.nl();
+					//if(b[0]==b[half_len]){bsw.print(b);} 
+					
+					
 					//bsw.print(bb.toBytes());
-					//seq_blocks++;
-					seq_lines++;
 					
-					//ugly logic block to only grab sequence lines
-					if(seq_lines==2 && first_seq==0){first_seq++; loop_block++; seq_lines=0;}
-					else if(seq_lines==4 && first_seq==1){loop_block++; seq_lines=0;}
+					/*Get info from Brian about how to split combined line without converting back to string*/
+					//String string_bb = bb.toString();
 					
-					if(loop_block==1){
-						for(int i=0; i<bb.length; i++){
-							bsw.print(bb.array[i]);
-							bsw.print("\n");
-							
-						}
-					}
-					
-					
+					//String[] parts_bb = string_bb.split("\\+");
+					//String seq = parts_bb[1];
+					//bb_2.append(seq);
+					//int half_len = (seq.length() / 2);
+					//bsw.print(half_len);
+					//for(int i=0; i<half_len && seq[i]!='\t'; i++) {
+					//	if(seq.charAt(i)==seq.charAt(seq.length()-i)){bsw.print(i);};
+					//}
+					bsw.print("\n\n\n");
+					//if(seq.charAt(0)==seq.charAt(seq.length()-1)){bsw.print("waffle");};
 					
 					
 					bb.clear();
-					loop_block=0;
 				}
 			}
 			line=bf.nextLine();
+			line2=bf.nextLine();
+			line3=bf.nextLine();
+			line4=bf.nextLine();
 		}
 	}
 	
@@ -248,9 +273,10 @@ public class A_SampleBasic {
 	private long bytesOut=0;
 	
 	private long seq_lines=0;
-	private long seq_blocks=0;
-	private long loop_block=0;
-	private long first_seq=0;
+    private long seq_blocks=0;
+    private long loop_block=0;
+    private long first_seq=0;
+	
 	/*--------------------------------------------------------------*/
 	/*----------------         Final Fields         ----------------*/
 	/*--------------------------------------------------------------*/
