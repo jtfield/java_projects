@@ -2,6 +2,7 @@ package template;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 
 import fileIO.ByteStreamWriter;
@@ -11,6 +12,7 @@ import shared.Parser;
 import shared.PreParser;
 import shared.Shared;
 import shared.Timer;
+import shared.Tools;
 import stream.ConcurrentReadInputStream;
 import stream.ConcurrentReadOutputStream;
 import stream.Read;
@@ -77,11 +79,13 @@ public class KmerPosition {
 			
 			maxReads=parser.maxReads;
 			in1=parser.in1;
+			in2=parser.in2;
 			out1=parser.out1;
 		}
 		
 		ffout1=FileFormat.testOutput(out1, FileFormat.TXT, null, true, true, false, false);
 		ffin1=FileFormat.testInput(in1, FileFormat.FASTQ, null, true, true);
+		ffin2=FileFormat.testInput(in2, FileFormat.FASTQ, null, true, true);
 		ffref=FileFormat.testInput(ref, FileFormat.FASTA, null, true, true);
 	}
 	
@@ -90,10 +94,11 @@ public class KmerPosition {
 		
 		final ConcurrentReadInputStream cris;
 		{
-			cris=ConcurrentReadInputStream.getReadInputStream(maxReads, true, ffin1, null);
+			cris=ConcurrentReadInputStream.getReadInputStream(maxReads, true, ffin1, ffin2);
 			cris.start();
 		}
 		boolean paired=cris.paired();
+		//System.out.println(paired);
 		
 		long readsProcessed=0, basesProcessed=0;
 		{
@@ -103,20 +108,26 @@ public class KmerPosition {
 			
 			if(reads!=null && !reads.isEmpty()){
 				Read r=reads.get(0);
+				
 				assert((ffin1==null || ffin1.samOrBam()) || (r.mate!=null)==cris.paired());
 			}
 			
 			while(ln!=null && reads!=null && reads.size()>0){//ln!=null prevents a compiler potential null access warning
 				if(verbose){outstream.println("Fetched "+reads.size()+" reads.");}
 				
+				
 				for(int idx=0; idx<reads.size(); idx++){
 					final Read r1=reads.get(idx);
+					final Read r2=r1.mate;
 					readsProcessed+=r1.pairCount();
 					basesProcessed+=r1.pairLength();
 					
 					//  *********  Process reads here  *********
-					processRead(r1, kr);
-					
+					//System.out.println(r1);
+					processRead(r1, kr, counts1, totalEncounter1);
+					if(r1.mate!=null) {
+						processRead(r2, kr, counts2, totalEncounter2);
+					}
 				}
 
 				cris.returnList(ln);
@@ -131,7 +142,8 @@ public class KmerPosition {
 		errorState=ReadWrite.closeStreams(cris) | errorState;
 		if(verbose){outstream.println("Finished reading data.");}
 		
-		outputResults();
+		//System.out.println(counts);
+		outputResults(counts1, totalEncounter1, counts2, totalEncounter2);
 		
 		t.stop();
 		outstream.println("Time:                         \t"+t);
@@ -139,13 +151,35 @@ public class KmerPosition {
 		assert(!errorState) : "An error was encountered.";
 	}
 	
-	private void outputResults(){
+	private void outputResults(LongList posCounts1, LongList readCounts1, LongList posCounts2, LongList readCounts2){
 		if(ffout1==null) {return;}
 		ByteStreamWriter bsw=new ByteStreamWriter(ffout1);
 		bsw.start();
 		
+		long[] readArray1 = readCounts1.toArray();
+		long[] countArray1 = posCounts1.toArray();
+		long[] readArray2 = readCounts2.toArray();
+		long[] countArray2 = posCounts2.toArray();
+		
+		bsw.println("#pos" + "\t" + "read1_count" + "\t" + "read1_perc" + "\t" + "read2_count" + "\t" + "read2_perc");
+		
+		int maxLen = Tools.max(readArray1.length, readArray2.length);
+		
+		for(int i=0; i<maxLen; i++) {
+			
+			bsw.print(i);
+			bsw.print('\t');
+			bsw.print(countArray1.length>i ? countArray1[i] : 0);
+			bsw.print('\t');
+			bsw.print(countArray1.length>i ? (countArray1[i] / (float) readArray1[i]) * 100 : 0, 3);
+			bsw.print('\t');
+			bsw.print(countArray2.length>i ? countArray2[i] : 0);
+			bsw.print('\t');
+			bsw.print(countArray2.length>i ? (countArray2[i] / (float) readArray2[i]) * 100 : 0, 3);
+			bsw.println();
+		}
 		//Write stuff to the bsw
-		bsw.println("Stuff");
+		//bsw.println("Stuff");
 
 		errorState=bsw.poisonAndWait() | errorState;
 	}
@@ -157,7 +191,7 @@ public class KmerPosition {
 			addToSet(hs, r);
 		}
 		
-		System.out.println(hs);
+		//System.out.println(hs);
 		
 		return hs;
 	}
@@ -173,17 +207,20 @@ public class KmerPosition {
 		return countRead;
 	}
 	
-	private void processRead(Read r, HashSet<String> hs) {
+	private LongList processRead(Read r, HashSet<String> hs, LongList count, LongList readCount) {
 		for(int i=0, j=k; j<=r.length(); i++, j++) {
 			//String(byte[] bytes, int offset, int length)
 			
 			String s=new String(r.bases, i, k);
-			totalEncounter.increment(i);
+			readCount.increment(i);
 			if(hs.contains(s)) {
-				counts.increment(i);
+				count.increment(i);
 			}
+			//System.out.println(totalEncounter);
+			//System.out.println(counts);
 			
 		}
+		return count;
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -191,10 +228,12 @@ public class KmerPosition {
 	/*--------------------------------------------------------------*/
 	
 	private String in1=null;
+	private String in2=null;
 	private String out1=null;
 	private String ref=null;
 	
 	private final FileFormat ffin1;
+	private final FileFormat ffin2;
 	private final FileFormat ffout1;
 	private final FileFormat ffref;
 	
@@ -203,8 +242,10 @@ public class KmerPosition {
 	private long maxReads=-1;
 	private boolean errorState=false;
 	private int k=6;
-	private LongList counts=new LongList();
-	private LongList totalEncounter=new LongList();
+	private LongList counts1=new LongList();
+	private LongList totalEncounter1=new LongList();
+	private LongList counts2=new LongList();
+	private LongList totalEncounter2=new LongList();
 	
 	/*--------------------------------------------------------------*/
 	
