@@ -116,14 +116,23 @@ public class TaxCompare {
 	        }
 	    
 	    //create matrix and add values
-	    long [][] matrix = new long[nameSet.size() + 1 ][nameSet.size() + 1];
+	    double [][] matrix = new double[nameSet.size() + 1 ][nameSet.size() + 1];
 	    
 	    //loop over lines and fill in matrix
 	    for(int i=0; i<lines.size(); i++) {
-	    	//System.out.println(lines.toArray()[i].getClass());
+	    	
 	    	fillMatrix(matrix, nameSet, lines.toArray()[i]);
 	    }
-	        
+	    
+	    System.out.println(nameSet);
+	    for (int i = 0; i < matrix.length; i++) {
+		    for (int j = 0; j < matrix[i].length; j++) {
+		        System.out.print(matrix[i][j] + " ");
+		    }
+		    System.out.println();
+		}
+	    
+	    
 	    }
 	    t.stop();
 	    System.out.println(t);
@@ -137,8 +146,45 @@ public class TaxCompare {
 	 * @param setNames Set of names of included organisms.
 	 * @param object Line of sketch comparison output file.
 	 */
-	void fillMatrix(long[][] matrix, Set<String> setNames, Object object) {
-		System.out.println(object);
+	void fillMatrix(double[][] matrix, Set<String> setNames, Object object) {
+		//System.out.println(object);
+		//cast line as string
+		String stringLine = (String) object;
+		
+		//split line
+		String[] lineData = stringLine.split("\t");
+		
+		//place both organism names in variables
+		//qName is the query, column 1
+		String qName = lineData[0];
+		String mName = lineData[1];
+		double similarity = Double.parseDouble(lineData[2]);
+		
+		//set positions variables
+		int qPos = -1;
+		int mPos = -1;
+		
+		//convert setNames to array that can be iterated over
+		String[] nameArray = setNames.toArray(new String[setNames.size()]);
+		
+		//loop over setNames and get each organisms positions within the matrix
+		for(int i = 0; i<nameArray.length; i++) {
+			if(nameArray[i].contentEquals(qName)) {qPos = i;}
+			else if(nameArray[i].contentEquals(mName)) {mPos = i;}
+			
+			
+			//after finding both name positions, add similarity value to matrix
+			if(qPos!=-1 && mPos!=-1) {matrix[qPos][mPos] = similarity;}
+		}
+		
+		//displays matrix
+		/*
+		for (int i = 0; i < matrix.length; i++) {
+		    for (int j = 0; j < matrix[i].length; j++) {
+		        System.out.print(matrix[i][j] + " ");
+		    }
+		    System.out.println();
+		}*/
 		
 	}
 	
