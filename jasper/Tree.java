@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+
 public class Tree {
 
 	HashMap<String, TreeNode> nodes = new HashMap<>();
@@ -65,7 +66,7 @@ public class Tree {
 		//Run method to add children nodes to each node if applicable
 		addChild(nodes, lines);
 		
-		
+		//return nodes;
 	}
 	
 	
@@ -100,12 +101,11 @@ public class Tree {
 			assert(orgNode != null): org;
 			parNode.addChildren(org);
 			//if(parNode != null && orgNode != null) {parNode.setChildren(par);}
-			assert(orgNode.orgName.equals("5")): orgNode;
+			//assert(orgNode.orgName.equals("5")): orgNode;
 			
 		}
 			
 	}
-	
 	
 	private String[] header;
 	private String in=null;

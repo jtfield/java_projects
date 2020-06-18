@@ -116,7 +116,7 @@ public class TaxCompare {
 	        }
 	    
 	    //create matrix and add values
-	    double [][] matrix = new double[nameSet.size() + 1 ][nameSet.size() + 1];
+	    double[][] matrix = new double[nameSet.size() + 1 ][nameSet.size() + 1];
 	    
 	    //loop over lines and fill in matrix
 	    for(int i=0; i<lines.size(); i++) {

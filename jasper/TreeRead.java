@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import shared.Timer;
@@ -26,6 +27,11 @@ public class TreeRead {
 		
 		//Pass input file to Tree class to create tree
 		Tree tree=new Tree(args[0]);
+		
+		SimilarityMatrix matrix=new SimilarityMatrix(args[1]);
+		
+		TreeNode orgName = tree.nodes.get("4");
+		System.out.println(orgName);
 		
 	
 	

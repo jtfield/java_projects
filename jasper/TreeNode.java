@@ -1,6 +1,5 @@
 package jasper;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class TreeNode {
@@ -10,7 +9,12 @@ public class TreeNode {
 	HashSet<String> children=new HashSet<String>();
 	String parent;
 	
-	// This is the constructor of the class TreeNode
+	/**
+	 * Creates an object of class TreeNode
+	 * 
+	 * @param name The name of the organism in this node
+	 * @param olds The name of the parent node
+	 */
 	public TreeNode(String name, String olds) {
 	    //this.taxId = id;
 	    this.orgName = name;
