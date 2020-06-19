@@ -28,10 +28,13 @@ public class TreeRead {
 		//Pass input file to Tree class to create tree
 		Tree tree=new Tree(args[0]);
 		
-		SimilarityMatrix matrix=new SimilarityMatrix(args[1]);
-		
+		//Check that tree object was constructed and populated
 		TreeNode orgName = tree.nodes.get("4");
 		System.out.println(orgName);
+		
+		SimilarityMatrix2 matrix=new SimilarityMatrix2(args[1]);
+		
+		matrix.showMatrix();
 		
 	
 	

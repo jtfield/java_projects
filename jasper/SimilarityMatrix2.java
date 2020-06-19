@@ -9,67 +9,52 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SimilarityMatrix {
+public class SimilarityMatrix2 {
 
-	//ArrayList that will hold the lines of the input file
-	ArrayList<String> lines = new ArrayList<String>();
-	
-	//Set that will hold the names of the organisms being compared in the input file
-	Set<String> nameSet = new HashSet<String>();
-	
-	/**
-	 * Builds a similarity matrix from an input file of similarity percentages
-	 * 
-	 * @param inputFile The file holding the output of Sketch comparisons.
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 */
-	public SimilarityMatrix(String inputFile) throws FileNotFoundException, IOException {
+	public SimilarityMatrix2(String inputFile) throws FileNotFoundException, IOException {
+        //this.M = M;
 		
 		//Take file name as input for building tree of related nodes
-		String[] split=inputFile.split("=");
-		String a=split[0].toLowerCase();
-		String b=split.length>1 ? split[1] : null;
-		if(b!=null && b.equalsIgnoreCase("null")){b=null;}
-		in = b;
-		
-		//Read in file, add header line and add to header variable
-	    try (BufferedReader br = new BufferedReader(new FileReader(in))) {
-	        String line;
-	        
-	        //while line isn't empty, process
-	        while ((line = br.readLine()) != null) {
-	        	
-	        	//if line is the header line, split and assign to variable.
-	        	//may be used when header becomes more complex
-	        	if(line.startsWith("#")) {header=line.split("\t");
-	        	} else {
-	        		String[] data = line.split("\t");
-	        		
-	        		//make sure the data in column 1 isn't in the header line
-		        	//column 1 should be query names
-	        		//Add the name of the query to the Set nameSet
-	        		if(!Arrays.asList(header).contains(data[0])) {nameSet.add(data[0]);}
-	        		
-	        		//add line to list of lines
-	        		lines.add(line);
-	        	
-	        	}
-	        	
-	        }
-	    }
-		
-	    //current location of the matrix. Not the ideal place for it 
-	    double[][] matrix = new double[nameSet.size() + 1 ][nameSet.size() + 1];
-	    
-	    //loop over lines and fill in matrix
+				String[] split=inputFile.split("=");
+				String a=split[0].toLowerCase();
+				String b=split.length>1 ? split[1] : null;
+				if(b!=null && b.equalsIgnoreCase("null")){b=null;}
+				in = b;
+				
+				//Read in file, add header line and add to header variable
+			    try (BufferedReader br = new BufferedReader(new FileReader(in))) {
+			        String line;
+			        
+			        //while line isn't empty, process
+			        while ((line = br.readLine()) != null) {
+			        	
+			        	//if line is the header line, split and assign to variable.
+			        	//may be used when header becomes more complex
+			        	if(line.startsWith("#")) {header=line.split("\t");
+			        	} else {
+			        		String[] data = line.split("\t");
+			        		
+			        		//make sure the data in column 1 isn't in the header line
+				        	//column 1 should be query names
+			        		//Add the name of the query to the Set nameSet
+			        		if(!Arrays.asList(header).contains(data[0])) {nameSet.add(data[0]);}
+			        		
+			        		//add line to list of lines
+			        		lines.add(line);
+			        	
+			        	}
+			        	
+			        }
+			    }
+		row = nameSet.size();
+        matrix = new double[row][row];
+        
+      //loop over lines and fill in matrix
 	    for(int i=0; i<lines.size(); i++) {
 	    	
 	    	
 	    	fillMatrix(matrix, nameSet, lines.toArray()[i]);
 	    }
-	    
-	    //return matrix;
 	}
 	
 	/**
@@ -115,7 +100,7 @@ public class SimilarityMatrix {
 		
 	}
 	
-	/*
+	
 	public void showMatrix() {
 		for (int i = 0; i < matrix.length; i++) {
 		    for (int j = 0; j < matrix[i].length; j++) {
@@ -124,9 +109,21 @@ public class SimilarityMatrix {
 		    System.out.println();
 		}
 	}
-	*/
+	
+	
+    
+	private double[][] matrix;
+	
+	private int row;
+	
+	//ArrayList that will hold the lines of the input file
+	ArrayList<String> lines = new ArrayList<String>();
+		
+	//Set that will hold the names of the organisms being compared in the input file
+	Set<String> nameSet = new HashSet<String>();
 	
 	private String[] header;
 	private String in=null;
 	private long linesProcessed=0;
+	
 }
