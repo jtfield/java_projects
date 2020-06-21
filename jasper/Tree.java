@@ -10,11 +10,10 @@ import java.util.HashMap;
 
 
 public class Tree {
-
-	HashMap<String, TreeNode> nodes = new HashMap<>();
 	
-	//ArrayList of all lines in input file. need these later to fill in values for children nodes
-	ArrayList<String> lines = new ArrayList<String>();
+	/*--------------------------------------------------------------*/
+	/*----------------        Initialization        ----------------*/
+	/*--------------------------------------------------------------*/
 	
 	/**
 	 * Takes in an input file with 2 columns (organism, parent organism) and adds these to TreeNodes
@@ -27,11 +26,14 @@ public class Tree {
 	public Tree(String inputFile) throws FileNotFoundException, IOException {
 		
 		//Take file name as input for building tree of related nodes
+		/*
 		String[] split=inputFile.split("=");
 		String a=split[0].toLowerCase();
 		String b=split.length>1 ? split[1] : null;
 		if(b!=null && b.equalsIgnoreCase("null")){b=null;}
 		in = b;
+		*/
+		in = inputFile;
 		
 		//parse file. create each node and place in 
 		try (BufferedReader br = new BufferedReader(new FileReader(in))) {
@@ -57,7 +59,9 @@ public class Tree {
 	        			
 	        			//Add line to lines list for further processing
 	        			lines.add(line);
-		
+	        			
+	        			//Increment linesProcessed
+	        			linesProcessed++;
 	        		}
 	        	}
 	        }
@@ -107,8 +111,23 @@ public class Tree {
 			
 	}
 	
+	/*--------------------------------------------------------------*/
+	/*----------------            Fields            ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	//HashMap holding the names of the organisms as keys and the organism node as values
+	HashMap<String, TreeNode> nodes = new HashMap<>();
+		
+	//ArrayList of all lines in input file. need these later to fill in values for children nodes
+	ArrayList<String> lines = new ArrayList<String>();
+	
+	//Header line of input file
 	private String[] header;
+	
+	//Input file name
 	private String in=null;
+	
+	//Number of lines processed for data from input file
 	private long linesProcessed=0;
 	
 }
