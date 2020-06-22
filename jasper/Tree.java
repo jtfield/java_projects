@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 
 public class Tree {
@@ -25,14 +28,6 @@ public class Tree {
 	 */
 	public Tree(String inputFile) throws FileNotFoundException, IOException {
 		
-		//Take file name as input for building tree of related nodes
-		/*
-		String[] split=inputFile.split("=");
-		String a=split[0].toLowerCase();
-		String b=split.length>1 ? split[1] : null;
-		if(b!=null && b.equalsIgnoreCase("null")){b=null;}
-		in = b;
-		*/
 		in = inputFile;
 		
 		//parse file. create each node and place in 
@@ -91,24 +86,51 @@ public class Tree {
 			//isolate the organism and the parent from the split
 			org = split[0];
 			par = split[1];
-			//System.out.println(org + " " + par);
 			
 			//get the organism node and parent node
 			TreeNode orgNode = treeNodeMap.get(org);
 			TreeNode parNode = treeNodeMap.get(par);
-			//System.out.println(orgNode.orgName);
-			//if(parNode != null) {System.out.println(parNode.orgName);}
 			
-			//if both nodes exist, do stuff
-			//if(parNode != null && orgNode != null) {System.out.println(orgNode.orgName);}
+			//Assert parent node isnt empty or parent node is the 0/life node.
 			assert(parNode != null || par.equals("0"));
+			
+			//Assert the query orgnaism node isnt empty, if it is, return node name.
 			assert(orgNode != null): org;
+			
+			//Add the child node name to the query node.
 			parNode.addChildren(org);
-			//if(parNode != null && orgNode != null) {parNode.setChildren(par);}
-			//assert(orgNode.orgName.equals("5")): orgNode;
 			
 		}
 			
+	}
+	
+	/**
+	 * Returns a StringBuilder of names of organisms/nodes along with
+	 * the parent node and the names of children nodes.
+	 * 
+	 * @return StringBuilder
+	 */
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		Iterator it = nodes.entrySet().iterator();
+	    while (it.hasNext()) {
+	    	Map.Entry pair = (Map.Entry)it.next();
+	    	sb.append(pair);
+	    	sb.append('\n');
+	    }
+		return sb.toString();
+	}
+	
+	/**
+	 * Returns Set<String> of node keys for the tree.
+	 * @return Set<String>
+	 */
+	public Set<String> keySet() {
+		return nodes.keySet();
+	}
+	
+	public TreeNode getNode(String nodeName) {
+		return nodes.get(nodeName);
 	}
 	
 	/*--------------------------------------------------------------*/

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import shared.Parser;
@@ -98,6 +99,19 @@ public class TreeValidate {
 	}
 	
 	
+	/*--------------------------------------------------------------*/
+	/*----------------         Outer Methods        ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	
+	/**
+	 * Creates the similarity matrix and the relationship tree.
+	 * Also passes these objects to the inner processing method for analysis.
+	 * 
+	 * @param t
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	void process(Timer t) throws FileNotFoundException, IOException{
 		
 		//Pass input file to Tree class to create tree
@@ -106,18 +120,43 @@ public class TreeValidate {
 		//Pass similarity file to create similarity matrix object
 		SimilarityMatrix2 matrix=new SimilarityMatrix2(sim);
 		
-		//return some value from the tree to make sure it wa processed
-		TreeNode orgName = relationshipTree.nodes.get("4");
-		System.out.println(orgName);
-		
-		matrix.showMatrix();
-		
-		outstream.println(matrix.getOrgNames());
+		//Check relationships in the tree by the results of the similarity matrix.
+		checkRelationships(relationshipTree, matrix);
 		
 		t.stop();
 		outstream.println("Time:                         \t"+t);
 		
 	}
+	
+	/*--------------------------------------------------------------*/
+	/*----------------         Inner Methods        ----------------*/
+	/*--------------------------------------------------------------*/
+	/**
+	 * Iterate over nodes in the Tree and compare present relationships
+	 * with values found in the similarity matrix.
+	 * 
+	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
+	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
+	 */
+	void checkRelationships(Tree tree, SimilarityMatrix2 matrix){
+		System.out.println(matrix.getSize());
+		for ( String key : tree.keySet() ) {
+
+			TreeNode node = tree.getNode(key);
+			
+			//If the node isn't also its parent.
+			//So the root node isnt search for in the matrix
+
+			String parent = node.getParent();
+			System.out.println(matrix.getNames().split("\t"));
+
+		}
+
+
+
+	}
+	
+	
 	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/

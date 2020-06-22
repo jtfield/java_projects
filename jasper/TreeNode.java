@@ -23,27 +23,40 @@ public class TreeNode {
 	    
     }
 	
+	/**
+	 * Add a child node to the HashSet of children nodes for this node.
+	 * 
+	 * @param kid Name of child node/organism.
+	 */
 	public void addChildren(String kid) {
 	      children.add(kid);
 	   }
 	
+	/**
+	 * Returns HashSet of child nodes for this node.
+	 * 
+	 * @return children HashSet of child nodes.
+	 */
 	public HashSet<String> getChildren() {
 	      return children;
 	   }
 	
+	/**
+	 * Returns the parent node of this node.
+	 * 
+	 * @return parent The name of the parent node.
+	 */
 	public String getParent() {
 	      return parent;
 	   }
 	
+	/**
+	 * Returns a string of the structure <Organism name>, <Parent Organism/node name>, <Child node names if any>.
+	 */
 	public String toString() {
 		return orgName + ", " + parent + ", " + children;
 	}
 	
-	public void printOrg() {
-	    //System.out.println("ID:"+ taxId );
-	    System.out.println("Name:" + orgName );
-	    System.out.println("children nodes: " + children);
-	    System.out.println("parent node:" + parent);
-	   }
+
 	
 }
