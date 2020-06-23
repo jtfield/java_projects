@@ -1,13 +1,9 @@
 package jasper;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class TreeNode {
-
-	String orgName;
-	int taxId;
-	HashSet<String> children=new HashSet<String>();
-	String parent;
 	
 	/**
 	 * Creates an object of class TreeNode
@@ -57,6 +53,45 @@ public class TreeNode {
 		return orgName + ", " + parent + ", " + children;
 	}
 	
-
+	/**
+	 * Add similarity values and child node names to a HashMap.
+	 * 
+	 * @param childName Name of direct child node.
+	 * @param similarity Similarity percentage between child node and this node.
+	 */
+	public void addChildSim(String childName, double similarity) {
+		childSims.put(childName, similarity);
+	}
 	
+	public void addParSim(double similarity) {
+		parSim = similarity;
+	}
+	
+	/*--------------------------------------------------------------*/
+	/*----------------            Fields            ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	//HashMap holding the names and similarity values between any direct children nodes
+	//and this node.
+	HashMap<String, Double> childSims = new HashMap<>();
+	
+	//Similarity percentage to the parent node.
+	double parSim = -1;
+	
+	//Organisms name associated with this node.
+	String orgName;
+	
+	//Taxanomic ID of this organism.
+	int taxId;
+	
+	//HashSet of direct children of this node.
+	HashSet<String> children=new HashSet<String>();
+	
+	//Descendents of this node.
+	
+	//Name of the parent of this node.
+	String parent;
+	
+	//Node leve within the tree.
+	int level;
 }

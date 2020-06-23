@@ -167,6 +167,9 @@ public class SimilarityMatrix2 {
 		return orgCount;
 	}
 	
+	public HashMap<String, Integer> getHashMap() {
+		return orgPosMap;
+	}
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
