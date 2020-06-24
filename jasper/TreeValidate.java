@@ -126,7 +126,7 @@ public class TreeValidate {
 		//Check similarities
 		checkSimilarities(relationshipTree, matrix);
 		
-		System.out.println(relationshipTree.getNode("sim_genome_1.fa").childSims);
+		System.out.println(relationshipTree.getNode("sim_genome_2.fa").parSim);
 		
 		t.stop();
 		outstream.println("Time:                         \t"+t);
@@ -232,6 +232,19 @@ public class TreeValidate {
 
 			//Identify parent node.
 			String parentName = keyNode.getParent();
+			
+			HashSet<String> childNames = keyNode.getChildren();
+			
+			//Get the organism names present in the matrix.
+			HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
+			
+			for(String orgName : matrixOrgs.keySet()) {
+				if(!keyOrg.equals("0") && !keyOrg.equals(orgName) && !childNames.contains(orgName) && orgName!=parentName ) {
+					//System.out.println(keyOrg);
+					//System.out.println(orgName);
+					System.out.println(matrix.getSimilarity(keyOrg, orgName));
+				}
+			}
 		}
 	}
 	
