@@ -63,13 +63,45 @@ public class TreeNode {
 		childSims.put(childName, similarity);
 	}
 	
+	public double getChildSim(String childName) {
+		double sim = childSims.get(childName);
+		return sim;
+	}
+	
 	public void addParSim(double similarity) {
 		parSim = similarity;
+	}
+	
+	public double minimumDescendantSim() {
+
+		for(String childName : children) {
+			if(childSims.get(childName) < minChildSim) {
+				minChildSim = childSims.get(childName);
+				//minChildName = childName;
+			}
+		}
+		return minChildSim;
+	}
+	
+	public String minimumDescendantName() {
+		for(String childName : children) {
+			
+			if(childSims.get(childName) < minChildSim) {
+				minChildName = childName;
+			}
+		}
+		return minChildName;
 	}
 	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
+	
+	double minChildSim = 100;
+	
+	String minChildName = null;
+	
+	HashMap<String, Double> minSimChild = new HashMap<>();
 	
 	//HashMap holding the names and similarity values between any direct children nodes
 	//and this node.
