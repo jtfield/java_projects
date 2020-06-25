@@ -99,6 +99,7 @@ public class Tree {
 			
 			//Add the child node name to the query node.
 			parNode.addChildren(org);
+			parNode.childNodes.add(orgNode);
 			
 		}
 			
@@ -152,4 +153,6 @@ public class Tree {
 	//Number of lines processed for data from input file
 	private long linesProcessed=0;
 	
+	//Node level counter
+	int orgLvl = 0;
 }

@@ -1,7 +1,9 @@
 package jasper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public class TreeNode {
 	
@@ -25,7 +27,7 @@ public class TreeNode {
 	 * @param kid Name of child node/organism.
 	 */
 	public void addChildren(String kid) {
-	      children.add(kid);
+	      childNames.add(kid);
 	   }
 	
 	/**
@@ -34,7 +36,7 @@ public class TreeNode {
 	 * @return children HashSet of child nodes.
 	 */
 	public HashSet<String> getChildren() {
-	      return children;
+	      return childNames;
 	   }
 	
 	/**
@@ -50,7 +52,7 @@ public class TreeNode {
 	 * Returns a string of the structure <Organism name>, <Parent Organism/node name>, <Child node names if any>.
 	 */
 	public String toString() {
-		return orgName + ", " + parent + ", " + children;
+		return orgName + ", " + parent + ", " + childNames + ", " + level;
 	}
 	
 	/**
@@ -63,18 +65,34 @@ public class TreeNode {
 		childSims.put(childName, similarity);
 	}
 	
+	/**
+	 * Returns the similarity percentage between this node and a child node.
+	 * 
+	 * @param childName The name of the child node.
+	 * @return double similarity percentage
+	 */
 	public double getChildSim(String childName) {
 		double sim = childSims.get(childName);
 		return sim;
 	}
 	
+	/**
+	 * Takes a double similarity percentage and associates that with the parent node.
+	 * 
+	 * @param similarity Percentage similarity between node and parent of type double
+	 */
 	public void addParSim(double similarity) {
 		parSim = similarity;
 	}
 	
+	/**
+	 * Returns the minimum similarity percentage of all descendants.
+	 * 
+	 * @return Similarity between node and child node with lowest similarity.
+	 */
 	public double minimumDescendantSim() {
 
-		for(String childName : children) {
+		for(String childName : childNames) {
 			if(childSims.get(childName) < minChildSim) {
 				minChildSim = childSims.get(childName);
 				//minChildName = childName;
@@ -83,8 +101,13 @@ public class TreeNode {
 		return minChildSim;
 	}
 	
+	/**
+	 * Returns name of child node with lowest similarity to this node.
+	 * 
+	 * @return Node name of child with lowest similarity (type String).
+	 */
 	public String minimumDescendantName() {
-		for(String childName : children) {
+		for(String childName : childNames) {
 			
 			if(childSims.get(childName) < minChildSim) {
 				minChildName = childName;
@@ -93,15 +116,61 @@ public class TreeNode {
 		return minChildName;
 	}
 	
+	/**
+	 * Adds name and similarity to HashMap if flagged as higher than a parent or child similarity. 
+	 * 
+	 * @param orgName
+	 * @param sim
+	 */
+	public void flagRelation(String orgName, double sim) {
+		flaggedRelationships.put(orgName, sim);
+	}
+	
+	/**
+	 * Returns HashMap holding all flagged relationships (nodes with higher similarity than
+	 * this nodes parent or the lowest similarity child).
+	 * @return HashMap
+	 */
+	public HashMap<String, Double> getFlaggedRelations(){
+		return flaggedRelationships;
+	}
+	
+	/**
+	 * Add level value to node in the tree
+	 * @param lvl Level of node in tree (type int).
+	 */
+	public void addLevel(int lvl) {
+		level = lvl;
+	}
+	
+	
+	public void traverse(int level_) {
+		
+		level = level_;
+		level_++;
+		
+		for(TreeNode childNode : childNodes) {
+			childNode.traverse(level_);
+		}
+		
+		
+	}
+	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
+	List<TreeNode> childNodes = new ArrayList<TreeNode>();
+	
+	//HashMap holding node names and similarities flagged as higher than similarities with
+	//direct children.
+	HashMap<String, Double> flaggedRelationships = new HashMap<>();
+	
+	//Minimum similarity of all child nodes and this node.
 	double minChildSim = 100;
 	
+	//Name of child node with minimum similarity.
 	String minChildName = null;
-	
-	HashMap<String, Double> minSimChild = new HashMap<>();
 	
 	//HashMap holding the names and similarity values between any direct children nodes
 	//and this node.
@@ -117,9 +186,9 @@ public class TreeNode {
 	int taxId;
 	
 	//HashSet of direct children of this node.
-	HashSet<String> children=new HashSet<String>();
+	HashSet<String> childNames=new HashSet<String>();
 	
-	//Descendents of this node.
+	//Descendants of this node.
 	
 	//Name of the parent of this node.
 	String parent;

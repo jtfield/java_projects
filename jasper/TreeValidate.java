@@ -184,6 +184,7 @@ public class TreeValidate {
 
 			//If the organism isn't the life/0 node.
 			if(!keyOrg.equals("0")) {
+				System.out.println("key org " + keyOrg);
 
 				//Get the node from the tree
 				TreeNode keyNode = tree.getNode(keyOrg);
@@ -204,6 +205,8 @@ public class TreeValidate {
 
 				//Iterate over the organisms in the matrix.
 				for(String matrixOrg : matrixOrgs.keySet()) {
+					//System.out.println();
+					//System.out.println("matrix org " + matrixOrg);
 
 					//if we aren't comparing similarities of the node to itself and
 					//if we aren't examining a child node and
@@ -214,17 +217,19 @@ public class TreeValidate {
 
 
 						if(matrixOrgSim > minChildSim || matrixOrgSim > keyNode.parSim) {
-
+							
+							/*
 							System.out.println();
 							System.out.println("problem");
-							System.out.println("Base org " + keyOrg);
+							System.out.println("key org " + keyOrg);
 							System.out.println("kid name " + minChildName);
 							System.out.println("par name " + parentName);
 							System.out.println("other org " + matrixOrg);
 							System.out.println("par sim " + keyNode.parSim);
 							System.out.println("child sim " + minChildSim);
 							System.out.println("matrix sim " + matrixOrgSim);
-							
+							*/
+							keyNode.flagRelation(matrixOrg, matrixOrgSim);
 						}
 
 					}
