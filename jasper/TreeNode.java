@@ -31,6 +31,27 @@ public class TreeNode {
 	   }
 	
 	/**
+	 * Add a child node to the HashSet of children nodes for this node.
+	 * 
+	 * @param kid Name of child node/organism.
+	 */
+	public void nodeAddDescendentNames(HashSet<String> desNames) {
+		//HashSet<String> descendentNodes = new HashSet<String>();
+		for(TreeNode childNode : childNodes) {
+			if(childNode.orgName != orgName) {
+				desNames.add(childNode.orgName);
+				//descendentNodes.add(childNode.orgName);
+				childNode.nodeAddDescendentNames(desNames);
+			}
+		}
+		//descendentNames = descendentNodes;
+	}
+	
+	public HashSet getDescendentNames() {
+		return descendentNames;
+	}
+	
+	/**
 	 * Returns HashSet of child nodes for this node.
 	 * 
 	 * @return children HashSet of child nodes.
@@ -143,17 +164,33 @@ public class TreeNode {
 		level = lvl;
 	}
 	
-	
+	/**
+	 * Adds hierarchical levels to nodes recursively through the tree.
+	 * @param level_
+	 */
 	public void traverse(int level_) {
 		
 		level = level_;
 		level_++;
 		
+		
 		for(TreeNode childNode : childNodes) {
-			childNode.traverse(level_);
+			
+			if(childNode.orgName != orgName) {
+				childNode.traverse(level_);
+				
+			}
+			//childNode.traverse(level_);
 		}
 		
-		
+	}
+	
+	/**
+	 * Returns hierarchical level of the node.
+	 * @return int level
+	 */
+	public int getLevel() {
+		return level;
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -187,6 +224,8 @@ public class TreeNode {
 	
 	//HashSet of direct children of this node.
 	HashSet<String> childNames=new HashSet<String>();
+	
+	HashSet<String> descendentNames=new HashSet<String>();
 	
 	//Descendants of this node.
 	

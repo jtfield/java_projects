@@ -91,14 +91,16 @@ public class Tree {
 			TreeNode orgNode = treeNodeMap.get(org);
 			TreeNode parNode = treeNodeMap.get(par);
 			
-			//Assert parent node isnt empty or parent node is the 0/life node.
+			//Assert parent node isn't empty or parent node is the 0/life node.
 			assert(parNode != null || par.equals("0"));
 			
-			//Assert the query orgnaism node isnt empty, if it is, return node name.
+			//Assert the query organism node isn't empty, if it is, return node name.
 			assert(orgNode != null): org;
 			
 			//Add the child node name to the query node.
 			parNode.addChildren(org);
+			
+			//add query node to its parent node's list of children nodes.
 			parNode.childNodes.add(orgNode);
 			
 		}
@@ -130,9 +132,37 @@ public class Tree {
 		return nodes.keySet();
 	}
 	
+	/**
+	 * Starting point for adding levels to nodes in the tree.
+	 * @param nodeName Lowest node name, corresponding to "Life"
+	 */
+	public void beginTraverse(String nodeName) {
+		TreeNode firstNode = nodes.get(nodeName);
+		firstNode.traverse(0);
+	}
+	
 	public TreeNode getNode(String nodeName) {
 		return nodes.get(nodeName);
 	}
+	
+	public void beginAddDescendents(String nodeName) {
+		TreeNode earliestNode = nodes.get(nodeName);
+		earliestNode.nodeAddDescendentNames(nodes.get(nodeName).descendentNames);
+	}
+	/*
+	public void addDescendents() {
+		for(String nodeName : nodes.keySet()) {
+			String origNode = nodeName;
+			System.out.println(nodes.get(origNode).getChildren());
+			if(nodes.get(origNode).getChildren().size()!=0) {
+				for(String childName : nodes.get(origNode).getChildren()) {
+					nodes.get(origNode).nodeAddDescendentNames(childName);
+					
+				}
+			}
+		}
+	}
+	*/
 	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/

@@ -123,10 +123,21 @@ public class TreeValidate {
 		//Add parent node similarity percentages to each node in the tree.
 		addRelationSims(relationshipTree, matrix);
 		
-		//Check similarities
+		//Traverse the tree and add levels to all nodes.
+		//Hardcoded to start at node "0" or "life" node.
+		relationshipTree.beginTraverse("0");
+		
+		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
 		
-		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").parSim);
+		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
+		
+		//System.out.println(relationshipTree.getNode("sim_genome_3.fa").getDescendentNames());
+		
+		relationshipTree.beginAddDescendents("sim_genome_2.fa");
+		
+		System.out.println(relationshipTree.getNode("sim_genome_2.fa").getDescendentNames());
+		
 		
 		t.stop();
 		outstream.println("Time:                         \t"+t);
@@ -184,7 +195,7 @@ public class TreeValidate {
 
 			//If the organism isn't the life/0 node.
 			if(!keyOrg.equals("0")) {
-				System.out.println("key org " + keyOrg);
+				//System.out.println("key org " + keyOrg);
 
 				//Get the node from the tree
 				TreeNode keyNode = tree.getNode(keyOrg);
