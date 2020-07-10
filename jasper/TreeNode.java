@@ -13,11 +13,12 @@ public class TreeNode {
 	 * @param name The name of the organism in this node
 	 * @param olds The name of the parent node
 	 */
-	public TreeNode(String name, String olds) {
+	public TreeNode(String name, String olds, int nodeId) {
 	    //this.taxId = id;
 	    this.orgName = name;
 	    //this.children = kids;
 	    this.parent = olds;
+	    this.nodeId = nodeId;
 	    
     }
 	
@@ -31,23 +32,32 @@ public class TreeNode {
 	   }
 	
 	/**
-	 * Add a child node to the HashSet of children nodes for this node.
+	 * Add a descendant node to the HashSet of descendant nodes for this node.
 	 * 
 	 * @param kid Name of child node/organism.
 	 */
-	public void nodeAddDescendentNames(HashSet<String> desNames) {
-		//HashSet<String> descendentNodes = new HashSet<String>();
+	public void nodeAddDescendantNames(HashSet<String> desNames) {
+		//Iterate over child nodes
 		for(TreeNode childNode : childNodes) {
+			
+			//If the name of the descendant node is not equal to this node
+			//This is only applicable for the "life"/"0" node
 			if(childNode.orgName != orgName) {
+				
+				//Add the descendant node name to the input HashSet of names.
 				desNames.add(childNode.orgName);
-				//descendentNodes.add(childNode.orgName);
-				childNode.nodeAddDescendentNames(desNames);
+				
+				//Run this function on the child nodes of each child node of the starting node.
+				childNode.nodeAddDescendantNames(desNames);
 			}
 		}
-		//descendentNames = descendentNodes;
 	}
 	
-	public HashSet getDescendentNames() {
+	/**
+	 * Return HashSet containing the names of descendant nodes.
+	 * @return descendantNames HashSet<String> of descendant nodes.
+	 */
+	public HashSet getDescendantNames() {
 		return descendentNames;
 	}
 	
@@ -73,7 +83,9 @@ public class TreeNode {
 	 * Returns a string of the structure <Organism name>, <Parent Organism/node name>, <Child node names if any>.
 	 */
 	public String toString() {
-		return orgName + ", " + parent + ", " + childNames + ", " + level;
+		return "Name = " + orgName + ", Parent = " + parent + ", Child names = " + childNames + ", Level = " + level
+				+ ", Nodes with identity = " + nodesWithIdentity + ", Identity = " + identity + 
+				", Average identity" + averageIdentity();
 	}
 	
 	/**
@@ -193,11 +205,75 @@ public class TreeNode {
 		return level;
 	}
 	
+	
+	/**
+	 * Tests to see if argument is descendant of this.
+	 * A node is considered a descendant of itself.
+	 * @param nodeB 
+	 * @return true if nodeB is a descendant of this
+	 */
+	public boolean isDescendantOf(final TreeNode nodeB) {
+		if(this == nodeB) {return true;}
+		else if(this.parentNode == this){return false;}
+		else {return parentNode.isDescendantOf(nodeB);}
+	}
+	
+	
+	public boolean isAncestorOf(final TreeNode nodeB) {
+		return nodeB.isDescendantOf(this);
+	}
+	
+	public void resetIdentity() {
+		identity = 0;
+		identitySum = 0;
+		nodesWithIdentity = 0;
+		sizeSum = 0;
+		
+
+		for(TreeNode childNode : childNodes) {
+
+			if(childNode.orgName != orgName) {
+				childNode.resetIdentity();
+
+			}
+		}
+	}
+	
+
+	public void percolateIdentityUp(int queryNode) {
+
+		if(identity > 0 && nodeId != queryNode) {nodesWithIdentity = 1; sizeSum = size; identitySum = identity;}
+
+		for(TreeNode childNode : childNodes) {
+
+			if(childNode.orgName != orgName) {
+				childNode.percolateIdentityUp(queryNode);
+
+				nodesWithIdentity+=childNode.nodesWithIdentity;
+				identitySum+=childNode.identitySum;
+				sizeSum+=childNode.sizeSum;
+
+			}
+		}
+	}
+	
+	
+	public double averageIdentity() {
+		if(nodesWithIdentity < 1) {return 0;}
+		else {return identitySum / nodesWithIdentity;}
+	}
+	
+	public int getNodeId() {
+		return nodeId;
+	}
+	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
 	List<TreeNode> childNodes = new ArrayList<TreeNode>();
+	
+	TreeNode parentNode = null;
 	
 	//HashMap holding node names and similarities flagged as higher than similarities with
 	//direct children.
@@ -222,6 +298,8 @@ public class TreeNode {
 	//Taxanomic ID of this organism.
 	int taxId;
 	
+	final int nodeId;
+	
 	//HashSet of direct children of this node.
 	HashSet<String> childNames=new HashSet<String>();
 	
@@ -234,4 +312,20 @@ public class TreeNode {
 	
 	//Node leve within the tree.
 	int level;
+	
+	
+	double identity = 0.0;
+	
+	//
+	long size = 0;
+	
+	long descendantSize = 0;
+	
+	int numDescendants = 0;
+	
+	double identitySum = 0;
+	
+	long nodesWithIdentity = 0;
+	
+	long sizeSum = 0;
 }

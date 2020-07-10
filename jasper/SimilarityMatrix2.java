@@ -26,8 +26,10 @@ public class SimilarityMatrix2 {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public SimilarityMatrix2(String inputFile) throws FileNotFoundException, IOException {
+	public SimilarityMatrix2(String inputFile, Tree tree_) throws FileNotFoundException, IOException {
 
+		tree = tree_;
+		
 		//Take file name as input for building tree of related nodes
 		in = inputFile;
 
@@ -51,21 +53,23 @@ public class SimilarityMatrix2 {
 					//String refName = data[1];
 					
 					//If query name isn't in the HashMap already, add it.
-					if(orgPosMap.containsKey(queryName)==false) {
-						orgPosMap.put(queryName, orgCount);
+					//if(orgPosMap.containsKey(queryName)==false) {
+					//	orgPosMap.put(queryName, orgCount);
 						
 						//Update count of organisms in HashMap.
 						//This is used for the size of the matrix.
-						orgCount++;
-					}
+						//orgCount++;
+					//}
 				}
 			}
 		}
 		
+		orgCount = tree.getOrgCount();
+		
 		//Initialize the matrix with the appropriate sizes.
-		matrix = new double[orgCount][orgCount];
+		matrix = new double[orgCount + 1][orgCount + 1];
 
-		//Begin readding the file a second time.
+		//Begin reading the file a second time.
 		try (BufferedReader br = new BufferedReader(new FileReader(in))) {
 			String line;
 
@@ -90,11 +94,11 @@ public class SimilarityMatrix2 {
 					double similarity = Double.parseDouble(data[2]);
 					
 					//Check that both names are in the HashMap (too slow?)
-					if(orgPosMap.containsKey(queryName)==true && orgPosMap.containsKey(refName)) {
+					if(tree.containsName(queryName)==true && tree.containsName(refName)) {
 						
 						//Get the positions assigned to both organisms.
-						int queryPos = orgPosMap.get(queryName);
-						int refPos = orgPosMap.get(refName);
+						int queryPos = nameToNodeId(queryName);
+						int refPos = nameToNodeId(refName);
 						
 						//Add the similarity percentage to the appropriate matrix position.
 						matrix[queryPos][refPos] = similarity;
@@ -103,6 +107,15 @@ public class SimilarityMatrix2 {
 			}
 		}	
 	}
+	
+	public int nameToNodeId(String orgName) {
+		TreeNode org = tree.getNode(orgName);
+		
+		assert(org != null) : orgName;
+		
+		return org.nodeId;
+	}
+	
 	
 	/**
 	 * Prints out the entire matrix.
@@ -129,51 +142,30 @@ public class SimilarityMatrix2 {
 	 * @return similarity The Double percentage similarity between the two sketches.
 	 */
 	public Double getSimilarity(String org1, String org2) {
-		int orgName1 = orgPosMap.get(org1);
-		int orgName2 = orgPosMap.get(org2);
+		int orgName1 = nameToNodeId(org1);
+		int orgName2 = nameToNodeId(org2);
 		
 		return matrix[orgName1][orgName2];
 	}
-	
-	public String getNames() {
-		
-		StringBuilder sb=new StringBuilder();
-		for(String key: orgPosMap.keySet()) {
-			sb.append(key);
-			sb.append('\t');
-		}
-		return sb.toString();
-	}
 
-	
-	
-	/**
-	 * Returns the names of each organism in the dataset along with its position in the matrix.
-	 * 
-	 * @return names StringBuilder of names.
-	 */
-	public String orgAndPosition() {
-		StringBuilder sb=new StringBuilder();
-		Iterator it = orgPosMap.entrySet().iterator();
-	    while (it.hasNext()) {
-	    	Map.Entry pair = (Map.Entry)it.next();
-	    	sb.append(pair);
-	    	sb.append('\n');
-	    }
-		return sb.toString();
-	}
 	
 	public int getSize() {
 		return orgCount;
 	}
 	
-	public HashMap<String, Integer> getHashMap() {
-		return orgPosMap;
+	
+	public double[] getOrgRow(String orgName) {
+		int rowNum = tree.nodeMap.get(orgName).nodeId;
+		return matrix[rowNum];
 	}
+	
+	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
     
+	final Tree tree;
+	
 	//Matrix that will hold the percentages of sketch comparisons
 	private double[][] matrix;
 	
@@ -184,10 +176,10 @@ public class SimilarityMatrix2 {
 	ArrayList<String> lines = new ArrayList<String>();
 		
 	//Set that will hold the names of the organisms being compared in the input file
-	Set<String> nameSet = new HashSet<String>();
+	//Set<String> nameSet = new HashSet<String>();
 	
 	//HashMap containing the name of the organism and its position within the matrix
-	HashMap<String, Integer> orgPosMap = new HashMap<>();
+	//HashMap<String, Integer> orgPosMap = new HashMap<>();
 	
 	//Header line of the comparison input file
 	private String[] header;
@@ -197,10 +189,5 @@ public class SimilarityMatrix2 {
 	
 	//Number of lines processed from the sketch comparison file
 	private long linesProcessed=0;
-
-	public void showMatrix() {
-		System.out.print(this);
-		
-	}
 	
 }

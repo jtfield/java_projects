@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 
@@ -28,6 +29,7 @@ public class Tree {
 	 */
 	public Tree(String inputFile) throws FileNotFoundException, IOException {
 		
+		int nodeId = 0;
 		in = inputFile;
 		
 		//parse file. create each node and place in 
@@ -47,10 +49,16 @@ public class Tree {
 	        			
 	        			//Create a TreeNode containing the name of the organism and the parent node/organism
 	        			//System.out.println(data[0]);
-	        			TreeNode orgName = new TreeNode(data[0], data[1]);
+	        			TreeNode orgNode = new TreeNode(data[0], data[1], nodeId);
+	        			
+	        			if(nodeId == 0) {root = orgNode;}
+	        			
+	        			nodeId++;
 	        			
 	        			//Add node to HashMap nodes with the name of the organism as the key
-	        			nodes.put(data[0], orgName);
+	        			nodeMap.put(data[0], orgNode);
+	        			
+	        			nodeList.add(orgNode);
 	        			
 	        			//Add line to lines list for further processing
 	        			lines.add(line);
@@ -63,7 +71,7 @@ public class Tree {
 		}
 	
 		//Run method to add children nodes to each node if applicable
-		addChild(nodes, lines);
+		addChild(nodeMap, lines);
 		
 		//return nodes;
 	}
@@ -103,6 +111,8 @@ public class Tree {
 			//add query node to its parent node's list of children nodes.
 			parNode.childNodes.add(orgNode);
 			
+			orgNode.parentNode = parNode;
+			
 		}
 			
 	}
@@ -115,10 +125,11 @@ public class Tree {
 	 */
 	public String toString() {
 		StringBuilder sb=new StringBuilder();
-		Iterator it = nodes.entrySet().iterator();
-	    while (it.hasNext()) {
-	    	Map.Entry pair = (Map.Entry)it.next();
-	    	sb.append(pair);
+		for(Entry<String, TreeNode> e : nodeMap.entrySet()) {
+			
+			TreeNode tn = e.getValue();
+	    	
+	    	sb.append(tn);
 	    	sb.append('\n');
 	    }
 		return sb.toString();
@@ -129,7 +140,7 @@ public class Tree {
 	 * @return Set<String>
 	 */
 	public Set<String> keySet() {
-		return nodes.keySet();
+		return nodeMap.keySet();
 	}
 	
 	/**
@@ -137,39 +148,77 @@ public class Tree {
 	 * @param nodeName Lowest node name, corresponding to "Life"
 	 */
 	public void beginTraverse(String nodeName) {
-		TreeNode firstNode = nodes.get(nodeName);
+		TreeNode firstNode = nodeMap.get(nodeName);
 		firstNode.traverse(0);
 	}
 	
+	/**
+	 * Returns node from tree.
+	 * @param nodeName
+	 * @return
+	 */
 	public TreeNode getNode(String nodeName) {
-		return nodes.get(nodeName);
+		return nodeMap.get(nodeName);
 	}
 	
-	public void beginAddDescendents(String nodeName) {
-		TreeNode earliestNode = nodes.get(nodeName);
-		earliestNode.nodeAddDescendentNames(nodes.get(nodeName).descendentNames);
+	public TreeNode getNode(int nodeId) {
+		return nodeList.get(nodeId);
 	}
-	/*
-	public void addDescendents() {
-		for(String nodeName : nodes.keySet()) {
-			String origNode = nodeName;
-			System.out.println(nodes.get(origNode).getChildren());
-			if(nodes.get(origNode).getChildren().size()!=0) {
-				for(String childName : nodes.get(origNode).getChildren()) {
-					nodes.get(origNode).nodeAddDescendentNames(childName);
-					
-				}
+	
+	/**
+	 * Currently takes node and adds all descendant node names to a HashSet<String>.
+	 * Returned with the getDescendentNames method.
+	 * @param nodeName
+	 */
+	public void beginAddDescendants(String nodeName) {
+		//Place target node in variable
+		TreeNode earliestNode = nodeMap.get(nodeName);
+		
+		//Run the method to add descendant names to HashSet in each node.
+		earliestNode.nodeAddDescendantNames(nodeMap.get(nodeName).descendentNames);
+	}
+	
+	
+	public void assignMatrixIdentity(SimilarityMatrix2 matrix, TreeNode node) {
+		
+	}
+	
+	public boolean containsName(String orgName) {
+		return nodeMap.containsKey(orgName);
+	}
+	
+	public int getOrgCount() {
+		int max = 0;
+		for(String node : nodeMap.keySet()) {
+			int id = this.getNode(node).getNodeId();
+			if(id > max) {
+				max = id;
 			}
 		}
+		return max;
 	}
-	*/
+	
+	public void setIdentity(TreeNode node, SimilarityMatrix2 matrix) {
+		
+		double[] row = matrix.getOrgRow(node.orgName);
+		for(int i=0; i<row.length; i++) {
+			double id = row[i];
+			nodeList.get(i).identity = id;
+		}
+	}
+	
+	
 	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
+	TreeNode root;
+	
 	//HashMap holding the names of the organisms as keys and the organism node as values
-	HashMap<String, TreeNode> nodes = new HashMap<>();
+	HashMap<String, TreeNode> nodeMap = new HashMap<String, TreeNode>();
+	
+	ArrayList<TreeNode> nodeList = new ArrayList<TreeNode>();
 		
 	//ArrayList of all lines in input file. need these later to fill in values for children nodes
 	ArrayList<String> lines = new ArrayList<String>();
@@ -185,4 +234,6 @@ public class Tree {
 	
 	//Node level counter
 	int orgLvl = 0;
+	
+	int orgCount = 0;
 }

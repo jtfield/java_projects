@@ -118,7 +118,7 @@ public class TreeValidate {
 		Tree relationshipTree=new Tree(tree);
 		
 		//Pass similarity file to create similarity matrix object
-		SimilarityMatrix2 matrix=new SimilarityMatrix2(sim);
+		SimilarityMatrix2 matrix=new SimilarityMatrix2(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
 		addRelationSims(relationshipTree, matrix);
@@ -127,16 +127,23 @@ public class TreeValidate {
 		//Hardcoded to start at node "0" or "life" node.
 		relationshipTree.beginTraverse("0");
 		
+		relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
+		
+		//TODO: remove 10 since this is just part of testing/percolate
+		relationshipTree.root.percolateIdentityUp(10);
+		
 		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
+		
+		System.out.println(relationshipTree);
 		
 		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
 		
 		//System.out.println(relationshipTree.getNode("sim_genome_3.fa").getDescendentNames());
 		
-		relationshipTree.beginAddDescendents("sim_genome_2.fa");
+		//relationshipTree.beginAddDescendants("sim_genome_4.fa");
 		
-		System.out.println(relationshipTree.getNode("sim_genome_2.fa").getDescendentNames());
+		//System.out.println(relationshipTree.getNode("sim_genome_4.fa").getDescendantNames());
 		
 		
 		t.stop();
@@ -207,40 +214,42 @@ public class TreeValidate {
 				HashSet<String> childNameSet = keyNode.getChildren();
 
 				//Get the organism names present in the matrix.
-				HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
+				//HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
 
-				String minChildName = keyNode.minimumDescendantName();
-				double minChildSim = keyNode.minimumDescendantSim();
+				//String minChildName = keyNode.minimumDescendantName();
+				//double minChildSim = keyNode.minimumDescendantSim();
 
 				//HashMap<String, Double> minSimChild = keyNode.minimumDescendantSim();
 
 				//Iterate over the organisms in the matrix.
-				for(String matrixOrg : matrixOrgs.keySet()) {
-					//System.out.println();
-					//System.out.println("matrix org " + matrixOrg);
+				//for(String matrixOrg : matrixOrgs.keySet()) {
+				for(String matrixOrg : tree.keySet()) {
+				
+					TreeNode matrixOrgNode = tree.getNode(matrixOrg);
 
 					//if we aren't comparing similarities of the node to itself and
 					//if we aren't examining a child node and
 					//if we aren't examining a parent node
-					if(!keyOrg.equals(matrixOrg) && !childNameSet.contains(matrixOrg) && !matrixOrg.equals(parentName) ) {
+					if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
 
 						double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
 
 
-						if(matrixOrgSim > minChildSim || matrixOrgSim > keyNode.parSim) {
+						if(matrixOrgSim > keyNode.parSim) {
 							
-							/*
+							
 							System.out.println();
 							System.out.println("problem");
 							System.out.println("key org " + keyOrg);
-							System.out.println("kid name " + minChildName);
+							//System.out.println("kid name " + minChildName);
 							System.out.println("par name " + parentName);
 							System.out.println("other org " + matrixOrg);
 							System.out.println("par sim " + keyNode.parSim);
-							System.out.println("child sim " + minChildSim);
+							//System.out.println("child sim " + minChildSim);
 							System.out.println("matrix sim " + matrixOrgSim);
-							*/
+							
 							keyNode.flagRelation(matrixOrg, matrixOrgSim);
+							System.out.println(keyNode.getFlaggedRelations());
 						}
 
 					}
