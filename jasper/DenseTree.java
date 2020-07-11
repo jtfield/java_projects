@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 
-public class Tree {
+public class DenseTree {
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Initialization        ----------------*/
@@ -27,7 +27,7 @@ public class Tree {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public Tree(String inputFile) throws FileNotFoundException, IOException {
+	public DenseTree(String inputFile) throws FileNotFoundException, IOException {
 		
 		int nodeId = 0;
 		in = inputFile;
@@ -179,7 +179,7 @@ public class Tree {
 	}
 	
 	
-	public void assignMatrixIdentity(SimilarityMatrix2 matrix, TreeNode node) {
+	public void assignMatrixIdentity(DenseSimilarityMatrix matrix, TreeNode node) {
 		
 	}
 	
@@ -198,7 +198,7 @@ public class Tree {
 		return max;
 	}
 	
-	public void setIdentity(TreeNode node, SimilarityMatrix2 matrix) {
+	public void setIdentity(TreeNode node, DenseSimilarityMatrix matrix) {
 		
 		double[] row = matrix.getOrgRow(node.orgName);
 		for(int i=0; i<row.length; i++) {

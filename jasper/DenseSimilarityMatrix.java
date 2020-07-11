@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class SimilarityMatrix2 {
+public class DenseSimilarityMatrix {
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Initialization        ----------------*/
@@ -26,7 +26,7 @@ public class SimilarityMatrix2 {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public SimilarityMatrix2(String inputFile, Tree tree_) throws FileNotFoundException, IOException {
+	public DenseSimilarityMatrix(String inputFile, DenseTree tree_) throws FileNotFoundException, IOException {
 
 		tree = tree_;
 		
@@ -164,7 +164,7 @@ public class SimilarityMatrix2 {
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
     
-	final Tree tree;
+	final DenseTree tree;
 	
 	//Matrix that will hold the percentages of sketch comparisons
 	private double[][] matrix;

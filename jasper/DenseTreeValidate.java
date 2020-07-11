@@ -17,7 +17,7 @@ import stream.Read;
 
 
 
-public class TreeValidate {
+public class DenseTreeValidate {
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Initialization        ----------------*/
@@ -29,7 +29,7 @@ public class TreeValidate {
 		Timer t=new Timer();
 		
 		//Create an instance of this class
-		TreeValidate x=new TreeValidate(args);
+		DenseTreeValidate x=new DenseTreeValidate(args);
 		
 		//Run the object
 		x.process(t);
@@ -44,7 +44,7 @@ public class TreeValidate {
 	 * 
 	 * @param args string of the arguments input at the commandline.
 	 */
-	public TreeValidate(String[] args) {
+	public DenseTreeValidate(String[] args) {
 		
 		{//Preparse block for help, config files, and outstream
 			PreParser pp=new PreParser(args, getClass(), false);
@@ -115,10 +115,10 @@ public class TreeValidate {
 	void process(Timer t) throws FileNotFoundException, IOException{
 		
 		//Pass input file to Tree class to create tree
-		Tree relationshipTree=new Tree(tree);
+		DenseTree relationshipTree=new DenseTree(tree);
 		
 		//Pass similarity file to create similarity matrix object
-		SimilarityMatrix2 matrix=new SimilarityMatrix2(sim, relationshipTree);
+		DenseSimilarityMatrix matrix=new DenseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
 		addRelationSims(relationshipTree, matrix);
@@ -161,7 +161,7 @@ public class TreeValidate {
 	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
 	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
 	 */
-	void addRelationSims(Tree tree, SimilarityMatrix2 matrix){
+	void addRelationSims(DenseTree tree, DenseSimilarityMatrix matrix){
 		
 		//Iterate over organisms/nodes in the tree.
 		for ( String keyOrg : tree.keySet() ) {
@@ -195,7 +195,7 @@ public class TreeValidate {
 		}
 	}
 	
-	void checkSimilarities(Tree tree, SimilarityMatrix2 matrix) {
+	void checkSimilarities(DenseTree tree, DenseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
 		for ( String keyOrg : tree.keySet() ) {
