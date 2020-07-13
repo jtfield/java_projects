@@ -135,7 +135,8 @@ public class SparseTreeValidate {
 		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
 		
-		System.out.println(relationshipTree);
+		//System.out.println(relationshipTree);
+		
 		
 		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
 		
@@ -226,26 +227,28 @@ public class SparseTreeValidate {
 				for(String matrixOrg : tree.keySet()) {
 				
 					TreeNode matrixOrgNode = tree.getNode(matrixOrg);
+					int matrixNodeId = tree.getNode(matrixOrg).getNodeId();
 
 					//if we aren't comparing similarities of the node to itself and
 					//if we aren't examining a child node and
 					//if we aren't examining a parent node
 					if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
-
+						
+						double[] keyOrgRow = matrix.getOrgRow(keyOrg);
 						double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
 
 
-						if(matrixOrgSim > keyNode.parSim) {
-							
+						//if(matrixOrgSim > keyNode.parSim) {
+						if(keyOrgRow[matrixNodeId] > keyNode.parSim) {
 							
 							System.out.println();
 							System.out.println("problem");
 							System.out.println("key org " + keyOrg);
-							//System.out.println("kid name " + minChildName);
+								
 							System.out.println("par name " + parentName);
 							System.out.println("other org " + matrixOrg);
 							System.out.println("par sim " + keyNode.parSim);
-							//System.out.println("child sim " + minChildSim);
+								
 							System.out.println("matrix sim " + matrixOrgSim);
 							
 							keyNode.flagRelation(matrixOrg, matrixOrgSim);

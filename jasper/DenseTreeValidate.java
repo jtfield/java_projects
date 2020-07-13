@@ -135,7 +135,7 @@ public class DenseTreeValidate {
 		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
 		
-		System.out.println(relationshipTree);
+		//System.out.println(relationshipTree);
 		
 		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
 		
