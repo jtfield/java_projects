@@ -78,11 +78,11 @@ public class SparseTreeValidate {
 			//Unused example statement. does nothing currently. start here for adding new flag parsing.
 			if(a.equals("parse_flag_goes_here")){
 				
-			//Handle reference variable assignment.
+			//Handle similarities file variable assignment.
 			}else if(a.equals("sim")){
 				sim=b;
 			
-			//Handle kmer variable assignment.
+			//Handle tree file variable assignment.
 			}else if(a.equals("tree")){
 				tree=b;
 					
@@ -115,10 +115,10 @@ public class SparseTreeValidate {
 	void process(Timer t) throws FileNotFoundException, IOException{
 		
 		//Pass input file to Tree class to create tree
-		DenseTree relationshipTree=new DenseTree(tree);
+		SparseTree relationshipTree=new SparseTree(tree);
 		
 		//Pass similarity file to create similarity matrix object
-		DenseSimilarityMatrix matrix=new DenseSimilarityMatrix(sim, relationshipTree);
+		SparseSimilarityMatrix matrix=new SparseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
 		addRelationSims(relationshipTree, matrix);
@@ -127,10 +127,11 @@ public class SparseTreeValidate {
 		//Hardcoded to start at node "0" or "life" node.
 		relationshipTree.beginTraverse("0");
 		
-		relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
+		//Sets the identities by beginning at a particular node and working backwards.
+		//relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
 		
 		//TODO: remove 10 since this is just part of testing/percolate
-		relationshipTree.root.percolateIdentityUp(10);
+		//relationshipTree.root.percolateIdentityUp(10);
 		
 		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
@@ -138,16 +139,8 @@ public class SparseTreeValidate {
 		//System.out.println(relationshipTree);
 		
 		
-		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
-		
-		//System.out.println(relationshipTree.getNode("sim_genome_3.fa").getDescendentNames());
-		
-		//relationshipTree.beginAddDescendants("sim_genome_4.fa");
-		
-		//System.out.println(relationshipTree.getNode("sim_genome_4.fa").getDescendantNames());
-		
-		
 		t.stop();
+		
 		outstream.println("Time:                         \t"+t);
 		
 	}
@@ -162,99 +155,118 @@ public class SparseTreeValidate {
 	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
 	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
 	 */
-	void addRelationSims(DenseTree tree, DenseSimilarityMatrix matrix){
+	void addRelationSims(SparseTree tree, SparseSimilarityMatrix matrix){
 		
 		//Iterate over organisms/nodes in the tree.
 		for ( String keyOrg : tree.keySet() ) {
 			
-			//Similarity between keyOrg node and its parent.
-			//double parSim;
-			
+			//add the node of current focus to a variable in the loop.
 			TreeNode keyNode = tree.getNode(keyOrg);
 			
 			//Identify parent node.
-			String parentName = keyNode.getParent();
+			String parentName = keyNode.getParentName();
+			
+			TreeNode parentNode = tree.getNode(parentName);
 			
 			//Get descendant nodes.
-			HashSet<String> childNames = keyNode.getChildren();
+			//HashSet<String> childNames = keyNode.getChildren();
 			
+			//If statement to ignore the root/"life" node when obtaining similarities.
+			//Then get the parent nodes similarity to the key node.
+			//add the similarity value to the key node.
 			if(!parentName.equals("0")) {
-				double parSim = matrix.getSimilarity(keyOrg, parentName);
-				//System.out.println(parSim);
-				keyNode.addParSim(parSim);
+				//Comparison parentComparison = matrix.getComparison(keyOrg, parentName);
+				
+				keyNode.addParSim(parentNode.averageIdentity());
 			}
 			
-			for(String kid : childNames) {
-				
-				if(!tree.getNode(kid).parent.equals("0")) {
-					
-					double kidSim = matrix.getSimilarity(keyOrg, kid);
-					
-					keyNode.addChildSim(kid, kidSim);
-				}
-			}
+//			//Iterate over child node names of the key node.
+//			for(TreeNode kid : keyNode.childNodes) {
+//				
+//				//Filters out nodes with parents that are the root/life node.
+//				if(kid != keyNode) {
+//					
+//					//Get the similarity between the key node and its child node.
+//					Comparison kidSim = matrix.getComparison(keyOrg, kid.orgName);
+//					
+//					//Add the similarity values from above to the key node.
+//					keyNode.addChildSim(kid, kidSim);
+//				}
+//			}
 		}
 	}
 	
-	void checkSimilarities(DenseTree tree, DenseSimilarityMatrix matrix) {
+	
+	/**
+	 * Method to check tree for surprising similarity values for each node in the tree.
+	 * Ignores the root/"life" node, any node without any sequence.
+	 * Any node with a higher similarity to another node than to its parent that
+	 * isn't an descendant is flagged as possibly erroneous.
+	 * 
+	 * @param tree The tree object storing taxon nodes (TreeNode objects).
+	 * @param matrix The sparse similarity matrix containing all possible pairwise similarity values.
+	 */
+	void checkSimilarities(SparseTree tree, SparseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
 		for ( String keyOrg : tree.keySet() ) {
 
 			//If the organism isn't the life/0 node.
 			if(!keyOrg.equals("0")) {
-				//System.out.println("key org " + keyOrg);
 
 				//Get the node from the tree
 				TreeNode keyNode = tree.getNode(keyOrg);
 
-				//Identify parent node.
-				String parentName = keyNode.getParent();
-
-				//Get the child node names.
-				HashSet<String> childNameSet = keyNode.getChildren();
-
-				//Get the organism names present in the matrix.
-				//HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
-
-				//String minChildName = keyNode.minimumDescendantName();
-				//double minChildSim = keyNode.minimumDescendantSim();
-
-				//HashMap<String, Double> minSimChild = keyNode.minimumDescendantSim();
-
-				//Iterate over the organisms in the matrix.
-				//for(String matrixOrg : matrixOrgs.keySet()) {
-				for(String matrixOrg : tree.keySet()) {
+				tree.setIdentity(keyNode, matrix);
 				
-					TreeNode matrixOrgNode = tree.getNode(matrixOrg);
-					int matrixNodeId = tree.getNode(matrixOrg).getNodeId();
+				tree.root.percolateIdentityUp(keyNode.nodeId);
+				
+				//Prevents analyses of "empty" nodes that don't contain sequences (genus/phylum/etc).
+				//TODO: if there are no sibling nodes, the parent sim could be 0.
+				if(keyNode.parSim != 0.0) {
 
-					//if we aren't comparing similarities of the node to itself and
-					//if we aren't examining a child node and
-					//if we aren't examining a parent node
-					if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
+					//Identify parent node.
+					String parentName = keyNode.getParentName();
+
+					//Get the row of similarity values associated with
+					//the key node and each other node.
+					ArrayList<Comparison> keyOrgRow = matrix.getOrgRow(keyOrg);
+
+					//Iterate over the node organism names.
+					for(Comparison rowOrgComparison : keyOrgRow) {
 						
-						double[] keyOrgRow = matrix.getOrgRow(keyOrg);
-						double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
+						//Get the node being iterated over in the tree.
+						TreeNode matrixOrgNode = tree.getNode(rowOrgComparison.refID);
 
+						//if we aren't comparing similarities of the node to itself and
+						//if we aren't examining a child node and
+						//if we aren't examining a parent node
+						if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !rowOrgComparison.equals(parentName) ) {
 
-						//if(matrixOrgSim > keyNode.parSim) {
-						if(keyOrgRow[matrixNodeId] > keyNode.parSim) {
-							
-							System.out.println();
-							System.out.println("problem");
-							System.out.println("key org " + keyOrg);
-								
-							System.out.println("par name " + parentName);
-							System.out.println("other org " + matrixOrg);
-							System.out.println("par sim " + keyNode.parSim);
-								
-							System.out.println("matrix sim " + matrixOrgSim);
-							
-							keyNode.flagRelation(matrixOrg, matrixOrgSim);
-							System.out.println(keyNode.getFlaggedRelations());
+							//Get similarity between the key node and any pairwise compared node
+							double matrixOrgSim = rowOrgComparison.identity;
+
+							//If the similarity value is higher than the similarity
+							//between the key node and its parent.
+							if(matrixOrgSim > keyNode.parSim) {
+
+								//Currently prints out a bunch of node/similarity info
+								//TODO: fix flagged node handling
+								System.out.println();
+								System.out.println("problem");
+								System.out.println("key org " + keyOrg);
+
+								System.out.println("par name " + parentName);
+								System.out.println("other org " + rowOrgComparison);
+								System.out.println("par sim " + keyNode.parSim);
+
+								System.out.println("matrix sim " + matrixOrgSim);
+
+								//keyNode.flagRelation(rowOrgComparison, matrixOrgSim);
+								System.out.println(keyNode.getFlaggedRelations());
+							}
+
 						}
-
 					}
 				}
 			}
@@ -267,8 +279,13 @@ public class SparseTreeValidate {
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
+	//Pairwise similarity file generated by BBSketch.
 	private String sim=null;
+	
+	//Tree file containing taxonomic relationships.
 	private String tree=null;
+	
+	//Output file name.
 	private String out=null;
 	
 	/*--------------------------------------------------------------*/

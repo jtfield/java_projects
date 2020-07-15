@@ -179,7 +179,7 @@ public class SparseTree {
 	}
 	
 	
-	public void assignMatrixIdentity(DenseSimilarityMatrix matrix, TreeNode node) {
+	public void assignMatrixIdentity(SparseSimilarityMatrix matrix, TreeNode node) {
 		
 	}
 	
@@ -187,6 +187,7 @@ public class SparseTree {
 		return nodeMap.containsKey(orgName);
 	}
 	
+	//TODO: make a more efficient method of getting the total node count.
 	public int getOrgCount() {
 		int max = 0;
 		for(String node : nodeMap.keySet()) {
@@ -198,12 +199,21 @@ public class SparseTree {
 		return max;
 	}
 	
-	public void setIdentity(TreeNode node, DenseSimilarityMatrix matrix) {
+	public void setIdentity(TreeNode node, SparseSimilarityMatrix matrix) {
 		
-		double[] row = matrix.getOrgRow(node.orgName);
-		for(int i=0; i<row.length; i++) {
-			double id = row[i];
-			nodeList.get(i).identity = id;
+		ArrayList<Comparison> row = matrix.getOrgRow(node.orgName);
+		for(int i=0; i<row.size(); i++) {
+			
+			Comparison c = row.get(i);
+			
+			int otherNodeId = c.refID;
+			
+			TreeNode otherNode = nodeList.get(otherNodeId);
+			
+			otherNode.identity = c.identity;
+			
+			
+			
 		}
 	}
 	

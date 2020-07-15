@@ -20,7 +20,7 @@ public class SparseSimilarityMatrix {
 
 	/**
 	 * Takes in a file of sketch similarity percentages from SketchCompare.
-	 * Returns an matrix object containing each percentage
+	 * Returns a sparse matrix object containing each percentage
 	 * 
 	 * @param inputFile The file containing pairwise comparisons of each sketch
 	 * @throws FileNotFoundException
@@ -28,8 +28,9 @@ public class SparseSimilarityMatrix {
 	 */
 	public SparseSimilarityMatrix(String inputFile, SparseTree tree_) throws FileNotFoundException, IOException {
 
+		//Assigns the input tree object to the tree variable.
 		tree = tree_;
-		
+
 		//Take file name as input for building tree of related nodes
 		in = inputFile;
 
@@ -44,31 +45,25 @@ public class SparseSimilarityMatrix {
 				//may be used when header becomes more complex
 				if(line.startsWith("#")) {header=line.split("\t");
 				} else {
-					
+
 					//If not a header line, split on tab.
 					String[] data = line.split("\t");
-					
+
 					//Query organism is column 0.
 					String queryName = data[0];
 					//String refName = data[1];
-					
-					//If query name isn't in the HashMap already, add it.
-					//if(orgPosMap.containsKey(queryName)==false) {
-					//	orgPosMap.put(queryName, orgCount);
-						
-						//Update count of organisms in HashMap.
-						//This is used for the size of the matrix.
-						//orgCount++;
-					//}
+
 				}
 			}
 		}
 		
+		//Get the total number of organisms in the tree.
 		orgCount = tree.getOrgCount();
 		
-		//Initialize the matrix with the appropriate sizes.
+		//Initialize the matrix with the appropriate size of all nodes.
 		sparseMatrix = new ArrayList[orgCount + 1];
 
+		//Iterate over the matrix and add an ArrayList<Comparison> to each ArrayList.
 		for(int i=0; i<sparseMatrix.length; i++) {
 			
 			sparseMatrix[i] = new ArrayList<Comparison>();
@@ -109,7 +104,6 @@ public class SparseSimilarityMatrix {
 						Comparison currentComparison = new Comparison(queryPos, refPos, similarity);
 						
 						//Add the similarity percentage to the appropriate matrix position.
-						//sparseMatrix[queryPos][refPos] = similarity;
 						sparseMatrix[queryPos].add(currentComparison);
 					}
 				}
@@ -117,11 +111,20 @@ public class SparseSimilarityMatrix {
 		}	
 	}
 	
+	/**
+	 * Method for taking the node name and returning the node ID value
+	 * @param orgName the organism node name (String).
+	 * @return int The node ID of the organism name taken as input.
+	 */
 	public int nameToNodeId(String orgName) {
+		
+		//Get the node associated with the input name.
 		TreeNode org = tree.getNode(orgName);
 		
+		//Asserts the org nod is in the tree.
 		assert(org != null) : orgName;
 		
+		//Return the int node ID.
 		return org.nodeId;
 	}
 	
@@ -142,20 +145,22 @@ public class SparseSimilarityMatrix {
 		return sb.toString();
 	}
 	
-	/**
-	 * Returns the similarity of two specified organisms.
-	 * Both organisms must have been compared using SketchCompare.
-	 * 
-	 * @param org1 The Name of an organism.
-	 * @param org2 The name of a second organism.
-	 * @return similarity The Double percentage similarity between the two sketches.
-	 */
-	public Comparison getSimilarity(String org1, String org2) {
-		int orgName1 = nameToNodeId(org1);
-		int orgName2 = nameToNodeId(org2);
-		
-		return sparseMatrix[orgName1].get(orgName2);
-	}
+	
+//TODO: This method is slow and doesnt work, need something better.	
+//	/**
+//	 * Returns the similarity of two specified organisms.
+//	 * Both organisms must have been compared using SketchCompare.
+//	 * 
+//	 * @param org1 The Name of an organism.
+//	 * @param org2 The name of a second organism.
+//	 * @return similarity The Double percentage similarity between the two sketches.
+//	 */
+//	public Comparison getComparison(String org1, String org2) {
+//		int orgName1 = nameToNodeId(org1);
+//		int orgName2 = nameToNodeId(org2);
+//		
+//		return sparseMatrix[orgName1].get(orgName2);
+//	}
 
 	
 	public int getSize() {

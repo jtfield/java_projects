@@ -172,7 +172,7 @@ public class DenseTreeValidate {
 			TreeNode keyNode = tree.getNode(keyOrg);
 			
 			//Identify parent node.
-			String parentName = keyNode.getParent();
+			String parentName = keyNode.getParentName();
 			
 			//Get descendant nodes.
 			HashSet<String> childNames = keyNode.getChildren();
@@ -207,51 +207,54 @@ public class DenseTreeValidate {
 				//Get the node from the tree
 				TreeNode keyNode = tree.getNode(keyOrg);
 
-				//Identify parent node.
-				String parentName = keyNode.getParent();
+				if(keyNode.parSim != 0.0) {
 
-				//Get the child node names.
-				HashSet<String> childNameSet = keyNode.getChildren();
+					//Identify parent node.
+					String parentName = keyNode.getParentName();
 
-				//Get the organism names present in the matrix.
-				//HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
+					//Get the child node names.
+					HashSet<String> childNameSet = keyNode.getChildren();
 
-				//String minChildName = keyNode.minimumDescendantName();
-				//double minChildSim = keyNode.minimumDescendantSim();
+					//Get the organism names present in the matrix.
+					//HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
 
-				//HashMap<String, Double> minSimChild = keyNode.minimumDescendantSim();
+					//String minChildName = keyNode.minimumDescendantName();
+					//double minChildSim = keyNode.minimumDescendantSim();
 
-				//Iterate over the organisms in the matrix.
-				//for(String matrixOrg : matrixOrgs.keySet()) {
-				for(String matrixOrg : tree.keySet()) {
-				
-					TreeNode matrixOrgNode = tree.getNode(matrixOrg);
+					//HashMap<String, Double> minSimChild = keyNode.minimumDescendantSim();
 
-					//if we aren't comparing similarities of the node to itself and
-					//if we aren't examining a child node and
-					//if we aren't examining a parent node
-					if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
+					//Iterate over the organisms in the matrix.
+					//for(String matrixOrg : matrixOrgs.keySet()) {
+					for(String matrixOrg : tree.keySet()) {
 
-						double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
+						TreeNode matrixOrgNode = tree.getNode(matrixOrg);
+
+						//if we aren't comparing similarities of the node to itself and
+						//if we aren't examining a child node and
+						//if we aren't examining a parent node
+						if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
+
+							double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
 
 
-						if(matrixOrgSim > keyNode.parSim) {
-							
-							
-							System.out.println();
-							System.out.println("problem");
-							System.out.println("key org " + keyOrg);
-							//System.out.println("kid name " + minChildName);
-							System.out.println("par name " + parentName);
-							System.out.println("other org " + matrixOrg);
-							System.out.println("par sim " + keyNode.parSim);
-							//System.out.println("child sim " + minChildSim);
-							System.out.println("matrix sim " + matrixOrgSim);
-							
-							keyNode.flagRelation(matrixOrg, matrixOrgSim);
-							System.out.println(keyNode.getFlaggedRelations());
+							if(matrixOrgSim > keyNode.parSim) {
+
+
+								System.out.println();
+								System.out.println("problem");
+								System.out.println("key org " + keyOrg);
+								//System.out.println("kid name " + minChildName);
+								System.out.println("par name " + parentName);
+								System.out.println("other org " + matrixOrg);
+								System.out.println("par sim " + keyNode.parSim);
+								//System.out.println("child sim " + minChildSim);
+								System.out.println("matrix sim " + matrixOrgSim);
+
+								keyNode.flagRelation(matrixOrg, matrixOrgSim);
+								System.out.println(keyNode.getFlaggedRelations());
+							}
+
 						}
-
 					}
 				}
 			}

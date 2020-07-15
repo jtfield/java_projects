@@ -9,6 +9,11 @@ public class Comparison {
 		this.identity = identity_;
 	}
 	
+	public String toString() {
+		return "Query node ID = " + queryID + ", Reference node ID = " + refID + 
+				", Similarity identity = " + identity;
+	}
+	
 	int queryID;
 	int refID;
 	double identity;

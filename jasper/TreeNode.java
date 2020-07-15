@@ -75,7 +75,7 @@ public class TreeNode {
 	 * 
 	 * @return parent The name of the parent node.
 	 */
-	public String getParent() {
+	public String getParentName() {
 	      return parent;
 	   }
 	
@@ -88,26 +88,26 @@ public class TreeNode {
 				", Average identity" + averageIdentity();
 	}
 	
-	/**
-	 * Add similarity values and child node names to a HashMap.
-	 * 
-	 * @param childName Name of direct child node.
-	 * @param similarity Similarity percentage between child node and this node.
-	 */
-	public void addChildSim(String childName, double similarity) {
-		childSims.put(childName, similarity);
-	}
+//	/**
+//	 * Add similarity values and child node names to a HashMap.
+//	 * 
+//	 * @param childName Name of direct child node.
+//	 * @param similarity Similarity percentage between child node and this node.
+//	 */
+//	public void addChildSim(String childName, double similarity) {
+//		childSims.put(childName, similarity);
+//	}
 	
-	/**
-	 * Returns the similarity percentage between this node and a child node.
-	 * 
-	 * @param childName The name of the child node.
-	 * @return double similarity percentage
-	 */
-	public double getChildSim(String childName) {
-		double sim = childSims.get(childName);
-		return sim;
-	}
+//	/**
+//	 * Returns the similarity percentage between this node and a child node.
+//	 * 
+//	 * @param childName The name of the child node.
+//	 * @return double similarity percentage
+//	 */
+//	public double getChildSim(String childName) {
+//		double sim = childSims.get(childName);
+//		return sim;
+//	}
 	
 	/**
 	 * Takes a double similarity percentage and associates that with the parent node.
@@ -118,36 +118,36 @@ public class TreeNode {
 		parSim = similarity;
 	}
 	
-	/**
-	 * Returns the minimum similarity percentage of all descendants.
-	 * 
-	 * @return Similarity between node and child node with lowest similarity.
-	 */
-	public double minimumDescendantSim() {
-
-		for(String childName : childNames) {
-			if(childSims.get(childName) < minChildSim) {
-				minChildSim = childSims.get(childName);
-				//minChildName = childName;
-			}
-		}
-		return minChildSim;
-	}
+//	/**
+//	 * Returns the minimum similarity percentage of all descendants.
+//	 * 
+//	 * @return Similarity between node and child node with lowest similarity.
+//	 */
+//	public double minimumDescendantSim() {
+//
+//		for(String childName : childNames) {
+//			if(childSims.get(childName) < minChildSim) {
+//				minChildSim = childSims.get(childName);
+//				//minChildName = childName;
+//			}
+//		}
+//		return minChildSim;
+//	}
 	
-	/**
-	 * Returns name of child node with lowest similarity to this node.
-	 * 
-	 * @return Node name of child with lowest similarity (type String).
-	 */
-	public String minimumDescendantName() {
-		for(String childName : childNames) {
-			
-			if(childSims.get(childName) < minChildSim) {
-				minChildName = childName;
-			}
-		}
-		return minChildName;
-	}
+//	/**
+//	 * Returns name of child node with lowest similarity to this node.
+//	 * 
+//	 * @return Node name of child with lowest similarity (type String).
+//	 */
+//	public String minimumDescendantName() {
+//		for(String childName : childNames) {
+//			
+//			if(childSims.get(childName) < minChildSim) {
+//				minChildName = childName;
+//			}
+//		}
+//		return minChildName;
+//	}
 	
 	/**
 	 * Adds name and similarity to HashMap if flagged as higher than a parent or child similarity. 
@@ -239,7 +239,11 @@ public class TreeNode {
 		}
 	}
 	
-
+/**
+ * Set nodes identity to the average identity of its descendants.
+ * 
+ * @param queryNode int ID of node relative to this node.
+ */
 	public void percolateIdentityUp(int queryNode) {
 
 		if(identity > 0 && nodeId != queryNode) {nodesWithIdentity = 1; sizeSum = size; identitySum = identity;}
@@ -287,7 +291,7 @@ public class TreeNode {
 	
 	//HashMap holding the names and similarity values between any direct children nodes
 	//and this node.
-	HashMap<String, Double> childSims = new HashMap<>();
+	//HashMap<String, Double> childSims = new HashMap<>();
 	
 	//Similarity percentage to the parent node.
 	double parSim = -1;
