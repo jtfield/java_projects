@@ -179,29 +179,39 @@ public class SparseSimilarityMatrix {
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
     
+	/**
+	 * A SparseTree object that contains taxonomic information relevant to this matrix.
+	 */
 	final SparseTree tree;
 	
+	/**
+	 * An arraylist containing comparisons between nodes in the tree.
+	 */
 	private final ArrayList<Comparison>[] sparseMatrix;
 	
-	//The number of sketches being analyzed
+	/**
+	 * The number of sketches being analyzed.
+	 */
 	private int orgCount;
 	
-	//ArrayList that will hold the lines of the input file
+	/**
+	 * ArrayList that will hold the lines of the input file.
+	 */
 	ArrayList<String> lines = new ArrayList<String>();
-		
-	//Set that will hold the names of the organisms being compared in the input file
-	//Set<String> nameSet = new HashSet<String>();
 	
-	//HashMap containing the name of the organism and its position within the matrix
-	//HashMap<String, Integer> orgPosMap = new HashMap<>();
-	
-	//Header line of the comparison input file
+	/**
+	 * Header line of the comparison input file.
+	 */
 	private String[] header;
 	
-	//Input file name
+	/**
+	 * Input file name.
+	 */
 	private String in=null;
 	
-	//Number of lines processed from the sketch comparison file
+	/**
+	 * Number of lines processed from the sketch comparison file.
+	 */
 	private long linesProcessed=0;
 	
 }

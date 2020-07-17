@@ -183,20 +183,33 @@ public class SparseTree {
 		
 	}
 	
+	/**
+	 * Returns boolean of whether the String organism name/node name is found in the tree.
+	 * @param orgName String organism/node name.
+	 * @return boolean
+	 */
 	public boolean containsName(String orgName) {
 		return nodeMap.containsKey(orgName);
 	}
 	
-	//TODO: make a more efficient method of getting the total node count.
+//	//TODO: make a more efficient method of getting the total node count.
+//	public int getOrgCount() {
+//		int max = 0;
+//		for(String node : nodeMap.keySet()) {
+//			int id = this.getNode(node).getNodeId();
+//			if(id > max) {
+//				max = id;
+//			}
+//		}
+//		return max;
+//	}
+	
+	/**
+	 * Returns the size of the HashMap containing all nodes in the tree.
+	 * @return int TreeNode count.
+	 */
 	public int getOrgCount() {
-		int max = 0;
-		for(String node : nodeMap.keySet()) {
-			int id = this.getNode(node).getNodeId();
-			if(id > max) {
-				max = id;
-			}
-		}
-		return max;
+		return nodeMap.keySet().size();
 	}
 	
 	public void setIdentity(TreeNode node, SparseSimilarityMatrix matrix) {

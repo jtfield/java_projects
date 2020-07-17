@@ -2,6 +2,12 @@ package jasper;
 
 public class Comparison {
 
+	/**
+	 * Object for storing sequence similarity values between two nodes
+	 * @param queryID_ int Node ID of the primary query sequence.
+	 * @param refID_ int Node ID of the reference sequence.
+	 * @param identity_ double similarity value between both nodes.
+	 */
 	public Comparison(int queryID_, int refID_, double identity_) {
 		
 		this.queryID = queryID_;

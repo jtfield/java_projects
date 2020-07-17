@@ -17,7 +17,7 @@ public class TreeNode {
 	    //this.taxId = id;
 	    this.orgName = name;
 	    //this.children = kids;
-	    this.parent = olds;
+	    this.parentName = olds;
 	    this.nodeId = nodeId;
 	    
     }
@@ -76,14 +76,14 @@ public class TreeNode {
 	 * @return parent The name of the parent node.
 	 */
 	public String getParentName() {
-	      return parent;
+	      return parentName;
 	   }
 	
 	/**
 	 * Returns a string of the structure <Organism name>, <Parent Organism/node name>, <Child node names if any>.
 	 */
 	public String toString() {
-		return "Name = " + orgName + ", Parent = " + parent + ", Child names = " + childNames + ", Level = " + level
+		return "Name = " + orgName + ", Parent = " + parentName + ", Child names = " + childNames + ", Level = " + level
 				+ ", Nodes with identity = " + nodesWithIdentity + ", Identity = " + identity + 
 				", Average identity" + averageIdentity();
 	}
@@ -109,14 +109,14 @@ public class TreeNode {
 //		return sim;
 //	}
 	
-	/**
-	 * Takes a double similarity percentage and associates that with the parent node.
-	 * 
-	 * @param similarity Percentage similarity between node and parent of type double
-	 */
-	public void addParSim(double similarity) {
-		parSim = similarity;
-	}
+//	/**
+//	 * Takes a double similarity percentage and associates that with the parent node.
+//	 * 
+//	 * @param similarity Percentage similarity between node and parent of type double
+//	 */
+//	public void addParSim(double similarity) {
+//		parSim = similarity;
+//	}
 	
 //	/**
 //	 * Returns the minimum similarity percentage of all descendants.
@@ -246,11 +246,20 @@ public class TreeNode {
  */
 	public void percolateIdentityUp(int queryNode) {
 
+		//If THIS nodes identity is greater than 0 (has an identity at all),
+		//and if THIS nodes ID isn't equal to the input query node
+		//nodes with identity becomes 1,
+		//sizeSum (number of nodes accounted for) is set to size (usually 0),
+		//identitySum (total of all identities) is set to THIS nodes identity.
 		if(identity > 0 && nodeId != queryNode) {nodesWithIdentity = 1; sizeSum = size; identitySum = identity;}
 
+		//Iterate over the child nodes of THIS node.
 		for(TreeNode childNode : childNodes) {
 
+			//If this node isn't a child of itself (handles the life or "0" node).
 			if(childNode.orgName != orgName) {
+				
+				//Calls percolateIdentityUp method recursively, pulling identities up to this node.
 				childNode.percolateIdentityUp(queryNode);
 
 				nodesWithIdentity+=childNode.nodesWithIdentity;
@@ -261,74 +270,166 @@ public class TreeNode {
 		}
 	}
 	
-	
+	/**
+	 * Returns the average identity of all descendant nodes to this node.
+	 * @return int Average identity.
+	 */
 	public double averageIdentity() {
 		if(nodesWithIdentity < 1) {return 0;}
 		else {return identitySum / nodesWithIdentity;}
 	}
 	
+	/**
+	 * Returns the nodeID.
+	 * @return int.
+	 */
 	public int getNodeId() {
 		return nodeId;
 	}
+	
+	/**
+	 * Returns the similarity of this node to its parent or
+	 * the average identity of the parent node. Whichever value is higher.
+	 * @return double Similarity value.
+	 */
+	public double parentSimilarity() {
+		if(parentNode.identity > parentNode.averageIdentity()) {
+			return parentNode.identity;
+		} else {
+			return parentNode.averageIdentity();
+		}
+	}
+	
+//	public double parentSimilarity() {
+//		return parentNode.averageIdentity();
+//	}
+	
+	
+	public StringBuilder toDot() {
+		return toDot(null);
+	}
+	
+	public StringBuilder toDot(StringBuilder sb) {
+		
+		if(sb==null) {sb = new StringBuilder();}
+		
+		boolean first = sb.length() == 0;
+		
+		if(first) {
+			sb.append("digraph g{\n");
+		} 
+		
+		sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\nID= " + String.format("%.2f", identity) +
+				"\\nAvg= " + String.format("%.2f", averageIdentity()) + "\"]\n");
+		
+		for(TreeNode childNode : childNodes) {
+			if(childNode != this) {
+				childNode.toDot(sb);
+			}
+		}
+		
+		for(TreeNode childNode : childNodes) {
+			sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
+		}
+		
+		if(first) {
+			sb.append("}\n");
+		}
+		return sb;
+	}
+	
+//	digraph g{
+//		a [label="a\nidentity=98\navgident=5"]
+//
+//		a -> b
+//	}
 	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
+	/**
+	 * The children/descendant nodes of this node.
+	 */
 	List<TreeNode> childNodes = new ArrayList<TreeNode>();
 	
+	/**
+	 * The parent node of this node.
+	 */
 	TreeNode parentNode = null;
 	
-	//HashMap holding node names and similarities flagged as higher than similarities with
-	//direct children.
+	/**
+	 * HashMap holding node names and similarities flagged as higher than similarities with
+	 * direct children.
+	 */
 	HashMap<String, Double> flaggedRelationships = new HashMap<>();
 	
 	//Minimum similarity of all child nodes and this node.
-	double minChildSim = 100;
+	//double minChildSim = 100;
 	
 	//Name of child node with minimum similarity.
-	String minChildName = null;
+	//String minChildName = null;
 	
 	//HashMap holding the names and similarity values between any direct children nodes
 	//and this node.
 	//HashMap<String, Double> childSims = new HashMap<>();
 	
 	//Similarity percentage to the parent node.
-	double parSim = -1;
+	//double parSim = -1;
 	
-	//Organisms name associated with this node.
+	/**
+	 * Organisms name associated with this node.
+	 */
 	String orgName;
 	
-	//Taxanomic ID of this organism.
+	/**
+	 * Taxanomic ID of this organism.
+	 */
 	int taxId;
-	
+	/**
+	 * int Node ID number.
+	 */
 	final int nodeId;
 	
-	//HashSet of direct children of this node.
+	/**
+	 * HashSet of direct children of this node.
+	 */
 	HashSet<String> childNames=new HashSet<String>();
 	
+	/**
+	 * The names of descendant nodes of this node.
+	 */
 	HashSet<String> descendentNames=new HashSet<String>();
 	
-	//Descendants of this node.
+	/**
+	 * Name of the parent of this node.
+	 */
+	String parentName;
 	
-	//Name of the parent of this node.
-	String parent;
-	
-	//Node leve within the tree.
+	/**
+	 * Node level within the tree. Important for taxonomic classification.
+	 */
 	int level;
 	
-	
+	/**
+	 * Sequence similarity between this node and another, query node.
+	 */
 	double identity = 0.0;
 	
-	//
 	long size = 0;
 	
 	long descendantSize = 0;
 	
 	int numDescendants = 0;
 	
+	/**
+	 * The identities of all children nodes to this node.
+	 */
 	double identitySum = 0;
 	
+	/**
+	 * The number of children nodes to this node that have identities.
+	 */
 	long nodesWithIdentity = 0;
 	
 	long sizeSum = 0;

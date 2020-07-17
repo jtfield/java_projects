@@ -1,8 +1,10 @@
 package jasper;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import fileIO.FileFormat;
 import shared.Parser;
 import shared.PreParser;
 import shared.Timer;
@@ -85,6 +88,14 @@ public class SparseTreeValidate {
 			//Handle tree file variable assignment.
 			}else if(a.equals("tree")){
 				tree=b;
+				
+			}else if(a.equals("writetrees")) {
+				writeTrees = true;
+	
+			}else if(a.equals("outpath") && writeTrees == true) {
+				outpath=b;
+				if(outpath.endsWith("/")) {System.out.println("output path correct");}
+				else {outpath = outpath + "/";}
 					
 			//Parses in and out flags, handles all flags not recognized earlier in class.
 			}else if(parser.parse(arg, a, b)){
@@ -94,8 +105,9 @@ public class SparseTreeValidate {
 				assert(false) : "Unknown parameter "+args[i];
 				outstream.println("Unknown parameter "+args[i]);
 			}
+			
 		}
-		
+		//ffout=FileFormat.testOutput(out, FileFormat.TXT, null, true, overwrite, append, false);
 	}
 	
 	
@@ -121,7 +133,9 @@ public class SparseTreeValidate {
 		SparseSimilarityMatrix matrix=new SparseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
-		addRelationSims(relationshipTree, matrix);
+		//addRelationSims(relationshipTree, matrix);
+		
+		System.out.println(relationshipTree.getNode(5));
 		
 		//Traverse the tree and add levels to all nodes.
 		//Hardcoded to start at node "0" or "life" node.
@@ -148,53 +162,34 @@ public class SparseTreeValidate {
 	/*--------------------------------------------------------------*/
 	/*----------------         Inner Methods        ----------------*/
 	/*--------------------------------------------------------------*/
-	/**
-	 * Iterate over nodes in the Tree and compare present relationships
-	 * with values found in the similarity matrix.
-	 * 
-	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
-	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
-	 */
-	void addRelationSims(SparseTree tree, SparseSimilarityMatrix matrix){
-		
-		//Iterate over organisms/nodes in the tree.
-		for ( String keyOrg : tree.keySet() ) {
-			
-			//add the node of current focus to a variable in the loop.
-			TreeNode keyNode = tree.getNode(keyOrg);
-			
-			//Identify parent node.
-			String parentName = keyNode.getParentName();
-			
-			TreeNode parentNode = tree.getNode(parentName);
-			
-			//Get descendant nodes.
-			//HashSet<String> childNames = keyNode.getChildren();
-			
-			//If statement to ignore the root/"life" node when obtaining similarities.
-			//Then get the parent nodes similarity to the key node.
-			//add the similarity value to the key node.
-			if(!parentName.equals("0")) {
-				//Comparison parentComparison = matrix.getComparison(keyOrg, parentName);
-				
-				keyNode.addParSim(parentNode.averageIdentity());
-			}
-			
-//			//Iterate over child node names of the key node.
-//			for(TreeNode kid : keyNode.childNodes) {
-//				
-//				//Filters out nodes with parents that are the root/life node.
-//				if(kid != keyNode) {
-//					
-//					//Get the similarity between the key node and its child node.
-//					Comparison kidSim = matrix.getComparison(keyOrg, kid.orgName);
-//					
-//					//Add the similarity values from above to the key node.
-//					keyNode.addChildSim(kid, kidSim);
-//				}
+//	/**
+//	 * Iterate over nodes in the Tree and compare present relationships
+//	 * with values found in the similarity matrix.
+//	 * 
+//	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
+//	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
+//	 */
+//	void addRelationSims(SparseTree tree, SparseSimilarityMatrix matrix){
+//
+//		//Iterate over organisms/nodes in the tree.
+//		for ( String keyOrg : tree.keySet() ) {
+//
+//			//add the node of current focus to a variable in the loop.
+//			TreeNode keyNode = tree.getNode(keyOrg);
+//
+//			//Get Parent node of keyNode.
+//			TreeNode parentNode = keyNode.parentNode;
+//
+//			//If statement to ignore the root/"life" node when obtaining similarities.
+//			//Then get the parent nodes similarity to the key node.
+//			//add the similarity value to the key node.
+//			if(!parentNode.orgName.equals("0")) {
+//
+//				keyNode.addParSim(parentNode.averageIdentity());
+//				System.out.println(parentNode.averageIdentity());
 //			}
-		}
-	}
+//		}
+//	}
 	
 	
 	/**
@@ -217,16 +212,33 @@ public class SparseTreeValidate {
 				//Get the node from the tree
 				TreeNode keyNode = tree.getNode(keyOrg);
 
+				tree.root.resetIdentity();
+				
 				tree.setIdentity(keyNode, matrix);
 				
 				tree.root.percolateIdentityUp(keyNode.nodeId);
 				
-				//Prevents analyses of "empty" nodes that don't contain sequences (genus/phylum/etc).
+				//System.out.println(tree.root.toDot());
+				
+				if(writeTrees == true) {
+					
+					String currentTreeName = outpath + "SimilarityTree_" + keyNode.orgName + "_.dot";
+
+					createFile(currentTreeName);
+
+					writeToFile(currentTreeName, tree.root.toDot());
+
+					//assert false;
+				}
+				//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
 				//TODO: if there are no sibling nodes, the parent sim could be 0.
-				if(keyNode.parSim != 0.0) {
+				if(keyNode.parentNode.averageIdentity() != 0.0) {
 
 					//Identify parent node.
 					String parentName = keyNode.getParentName();
+					
+					//Get parent node ID
+					//int parentID = tree.getNode(parentName).getNodeId();
 
 					//Get the row of similarity values associated with
 					//the key node and each other node.
@@ -248,7 +260,7 @@ public class SparseTreeValidate {
 
 							//If the similarity value is higher than the similarity
 							//between the key node and its parent.
-							if(matrixOrgSim > keyNode.parSim) {
+							if(matrixOrgSim > keyNode.parentSimilarity()) {
 
 								//Currently prints out a bunch of node/similarity info
 								//TODO: fix flagged node handling
@@ -258,7 +270,7 @@ public class SparseTreeValidate {
 
 								System.out.println("par name " + parentName);
 								System.out.println("other org " + rowOrgComparison);
-								System.out.println("par sim " + keyNode.parSim);
+								System.out.println("par sim " + keyNode.parentSimilarity());
 
 								System.out.println("matrix sim " + matrixOrgSim);
 
@@ -273,6 +285,31 @@ public class SparseTreeValidate {
 		}
 	}
 
+	void createFile(String fileName) {
+		try {
+			File myObj = new File(fileName);
+			if (myObj.createNewFile()) {
+				System.out.println("File created: " + myObj.getName());
+			} else {
+				System.out.println("File already exists.");
+			}
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
+	void writeToFile(String fileName, StringBuilder sb) {
+		try {
+			FileWriter myWriter = new FileWriter(fileName);
+			myWriter.write(sb.toString());
+			myWriter.close();
+			System.out.println("Successfully wrote to the file.");
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
 	
 	
 	/*--------------------------------------------------------------*/
@@ -287,6 +324,10 @@ public class SparseTreeValidate {
 	
 	//Output file name.
 	private String out=null;
+	
+	private String outpath=null;
+	
+	private boolean writeTrees = false;
 	
 	/*--------------------------------------------------------------*/
 	

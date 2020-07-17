@@ -121,29 +121,21 @@ public class DenseTreeValidate {
 		DenseSimilarityMatrix matrix=new DenseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
-		addRelationSims(relationshipTree, matrix);
+		//addRelationSims(relationshipTree, matrix);
 		
 		//Traverse the tree and add levels to all nodes.
 		//Hardcoded to start at node "0" or "life" node.
 		relationshipTree.beginTraverse("0");
 		
-		relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
+		//relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
 		
 		//TODO: remove 10 since this is just part of testing/percolate
-		relationshipTree.root.percolateIdentityUp(10);
+		//relationshipTree.root.percolateIdentityUp(10);
 		
 		//Check similarities.
 		checkSimilarities(relationshipTree, matrix);
 		
 		//System.out.println(relationshipTree);
-		
-		//System.out.println(relationshipTree.getNode("sim_genome_2.fa").getLevel());
-		
-		//System.out.println(relationshipTree.getNode("sim_genome_3.fa").getDescendentNames());
-		
-		//relationshipTree.beginAddDescendants("sim_genome_4.fa");
-		
-		//System.out.println(relationshipTree.getNode("sim_genome_4.fa").getDescendantNames());
 		
 		
 		t.stop();
@@ -154,77 +146,78 @@ public class DenseTreeValidate {
 	/*--------------------------------------------------------------*/
 	/*----------------         Inner Methods        ----------------*/
 	/*--------------------------------------------------------------*/
-	/**
-	 * Iterate over nodes in the Tree and compare present relationships
-	 * with values found in the similarity matrix.
-	 * 
-	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
-	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
-	 */
-	void addRelationSims(DenseTree tree, DenseSimilarityMatrix matrix){
-		
-		//Iterate over organisms/nodes in the tree.
-		for ( String keyOrg : tree.keySet() ) {
-			
-			//Similarity between keyOrg node and its parent.
-			//double parSim;
-			
-			TreeNode keyNode = tree.getNode(keyOrg);
-			
-			//Identify parent node.
-			String parentName = keyNode.getParentName();
-			
-			//Get descendant nodes.
-			HashSet<String> childNames = keyNode.getChildren();
-			
-			if(!parentName.equals("0")) {
-				double parSim = matrix.getSimilarity(keyOrg, parentName);
-				//System.out.println(parSim);
-				keyNode.addParSim(parSim);
-			}
-			
-			for(String kid : childNames) {
-				
-				if(!tree.getNode(kid).parent.equals("0")) {
-					
-					double kidSim = matrix.getSimilarity(keyOrg, kid);
-					
-					keyNode.addChildSim(kid, kidSim);
-				}
-			}
-		}
-	}
+//	/**
+//	 * Iterate over nodes in the Tree and compare present relationships
+//	 * with values found in the similarity matrix.
+//	 * 
+//	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
+//	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
+//	 */
+//	void addRelationSims(DenseTree tree, DenseSimilarityMatrix matrix){
+//		
+//		//Iterate over organisms/nodes in the tree.
+//		for ( String keyOrg : tree.keySet() ) {
+//			
+//			TreeNode keyNode = tree.getNode(keyOrg);
+//			
+//			//Identify parent node.
+//			String parentName = keyNode.getParentName();
+//			
+//			//Get descendant nodes.
+//			HashSet<String> childNames = keyNode.getChildren();
+//			
+//			if(!parentName.equals("0")) {
+//				
+//				double parSim = matrix.getSimilarity(keyOrg, parentName);
+//				
+//				keyNode.addParSim(parSim);
+//			}
+//			
+//			for(String kid : childNames) {
+//				
+//				if(!tree.getNode(kid).parentName.equals("0")) {
+//					
+//					double kidSim = matrix.getSimilarity(keyOrg, kid);
+//					
+//					keyNode.addChildSim(kid, kidSim);
+//				}
+//			}
+//		}
+//	}
 	
 	void checkSimilarities(DenseTree tree, DenseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
-		for ( String keyOrg : tree.keySet() ) {
+		for ( String keyOrgName : tree.keySet() ) {
 
 			//If the organism isn't the life/0 node.
-			if(!keyOrg.equals("0")) {
+			if(!keyOrgName.equals("0")) {
 				//System.out.println("key org " + keyOrg);
 
 				//Get the node from the tree
-				TreeNode keyNode = tree.getNode(keyOrg);
+				TreeNode keyNode = tree.getNode(keyOrgName);
+				
+				int keyNodeID = keyNode.getNodeId();
 
-				if(keyNode.parSim != 0.0) {
+				tree.root.resetIdentity();
+				
+				tree.setIdentity(keyNode, matrix);
+				
+				tree.root.percolateIdentityUp(keyNode.nodeId);
+				
+				//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
+				//TODO: if there are no sibling nodes, the parent sim could be 0.
+				if(keyNode.parentNode.averageIdentity() != 0.0) {
 
 					//Identify parent node.
 					String parentName = keyNode.getParentName();
+					
+					double parentSimilarity = matrix.getSimilarity(keyOrgName, parentName);
 
 					//Get the child node names.
 					HashSet<String> childNameSet = keyNode.getChildren();
 
-					//Get the organism names present in the matrix.
-					//HashMap<String, Integer> matrixOrgs = matrix.getHashMap();
-
-					//String minChildName = keyNode.minimumDescendantName();
-					//double minChildSim = keyNode.minimumDescendantSim();
-
-					//HashMap<String, Double> minSimChild = keyNode.minimumDescendantSim();
-
 					//Iterate over the organisms in the matrix.
-					//for(String matrixOrg : matrixOrgs.keySet()) {
 					for(String matrixOrg : tree.keySet()) {
 
 						TreeNode matrixOrgNode = tree.getNode(matrixOrg);
@@ -234,19 +227,19 @@ public class DenseTreeValidate {
 						//if we aren't examining a parent node
 						if(!matrixOrgNode.isDescendantOf(keyNode) && !matrixOrgNode.isAncestorOf(keyNode) && !matrixOrg.equals(parentName) ) {
 
-							double matrixOrgSim = matrix.getSimilarity(keyOrg, matrixOrg);
+							double matrixOrgSim = matrix.getSimilarity(keyOrgName, matrixOrg);
 
 
-							if(matrixOrgSim > keyNode.parSim) {
+							if(matrixOrgSim > parentSimilarity) {
 
 
 								System.out.println();
 								System.out.println("problem");
-								System.out.println("key org " + keyOrg);
+								System.out.println("key org " + keyOrgName);
 								//System.out.println("kid name " + minChildName);
 								System.out.println("par name " + parentName);
 								System.out.println("other org " + matrixOrg);
-								System.out.println("par sim " + keyNode.parSim);
+								System.out.println("par sim " + parentSimilarity);
 								//System.out.println("child sim " + minChildSim);
 								System.out.println("matrix sim " + matrixOrgSim);
 
@@ -261,6 +254,7 @@ public class DenseTreeValidate {
 		}
 	}
 
+	
 	
 	
 	/*--------------------------------------------------------------*/
