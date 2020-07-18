@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 
-public class SparseTree {
+public class NCBISparseTree {
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Initialization        ----------------*/
@@ -27,7 +27,7 @@ public class SparseTree {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public SparseTree(String inputFile) throws FileNotFoundException, IOException {
+	public NCBISparseTree(String inputFile) throws FileNotFoundException, IOException {
 		
 		int nodeId = 0;
 		in = inputFile;
@@ -185,7 +185,7 @@ public class SparseTree {
 	}
 	
 	
-	public void assignMatrixIdentity(SparseSimilarityMatrix matrix, TreeNode node) {
+	public void assignMatrixIdentity(NCBISparseSimilarityMatrix matrix, TreeNode node) {
 		
 	}
 	
@@ -225,7 +225,7 @@ public class SparseTree {
 	 * @param node TreeNode query node.
 	 * @param matrix SparseSimilarityMatrix name containing similarity Comparison objects.
 	 */
-	public void setIdentity(TreeNode node, SparseSimilarityMatrix matrix) {
+	public void setIdentity(TreeNode node, NCBISparseSimilarityMatrix matrix) {
 		
 		//Get the row containing all Comparisons for the query node.
 		ArrayList<Comparison> row = matrix.getOrgRow(node.orgName);

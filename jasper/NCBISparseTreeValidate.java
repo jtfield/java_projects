@@ -20,7 +20,7 @@ import stream.Read;
 
 
 
-public class SparseTreeValidate {
+public class NCBISparseTreeValidate {
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Initialization        ----------------*/
@@ -32,7 +32,7 @@ public class SparseTreeValidate {
 		Timer t=new Timer();
 		
 		//Create an instance of this class
-		SparseTreeValidate x=new SparseTreeValidate(args);
+		NCBISparseTreeValidate x=new NCBISparseTreeValidate(args);
 		
 		//Run the object
 		x.process(t);
@@ -47,7 +47,7 @@ public class SparseTreeValidate {
 	 * 
 	 * @param args string of the arguments input at the commandline.
 	 */
-	public SparseTreeValidate(String[] args) {
+	public NCBISparseTreeValidate(String[] args) {
 		
 		{//Preparse block for help, config files, and outstream
 			PreParser pp=new PreParser(args, getClass(), false);
@@ -129,10 +129,12 @@ public class SparseTreeValidate {
 	void process(Timer t) throws FileNotFoundException, IOException{
 		
 		//Pass input file to Tree class to create tree
-		SparseTree relationshipTree=new SparseTree(tree);
+		NCBISparseTree relationshipTree=new NCBISparseTree(tree);
+		
+		assert false;
 		
 		//Pass similarity file to create similarity matrix object
-		SparseSimilarityMatrix matrix=new SparseSimilarityMatrix(sim, relationshipTree);
+		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
 		//addRelationSims(relationshipTree, matrix);
@@ -171,7 +173,7 @@ public class SparseTreeValidate {
 //	 * @param tree Tree object containing TreeNode objects detailing the parent and children of each node.
 //	 * @param matrix SimilarityMatrix2 object containing percentage similarity of sketches.
 //	 */
-//	void addRelationSims(SparseTree tree, SparseSimilarityMatrix matrix){
+//	void addRelationSims(NCBISparseTree tree, SparseSimilarityMatrix matrix){
 //
 //		//Iterate over organisms/nodes in the tree.
 //		for ( String keyOrg : tree.keySet() ) {
@@ -203,7 +205,7 @@ public class SparseTreeValidate {
 	 * @param tree The tree object storing taxon nodes (TreeNode objects).
 	 * @param matrix The sparse similarity matrix containing all possible pairwise similarity values.
 	 */
-	void checkSimilarities(SparseTree tree, SparseSimilarityMatrix matrix) {
+	void checkSimilarities(NCBISparseTree tree, NCBISparseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
 		for ( String keyOrg : tree.keySet() ) {

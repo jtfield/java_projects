@@ -287,51 +287,70 @@ public class TreeNode {
 		return nodeId;
 	}
 	
-	/**
-	 * Returns the similarity of this node to its parent or
-	 * the average identity of the parent node. Whichever value is higher.
-	 * @return double Similarity value.
-	 */
-	public double parentSimilarity() {
-		if(parentNode.identity > parentNode.averageIdentity()) {
-			return parentNode.identity;
-		} else {
-			return parentNode.averageIdentity();
-		}
-	}
-	
+//	/**
+//	 * Returns the similarity of this node to its parent or
+//	 * the average identity of the parent node. Whichever value is higher.
+//	 * @return double Similarity value.
+//	 */
 //	public double parentSimilarity() {
-//		return parentNode.averageIdentity();
+//		if(parentNode.identity > parentNode.averageIdentity()) {
+//			return parentNode.identity;
+//		} else {
+//			return parentNode.averageIdentity();
+//		}
 //	}
 	
+	public double parentSimilarity() {
+		return parentNode.averageIdentity();
+	}
 	
+	/**
+	 * Method to call toDot method without requiring input.
+	 * @return StringBuilder from toDot.
+	 */
 	public StringBuilder toDot() {
 		return toDot(null);
 	}
 	
+	/**
+	 * Method to implement tree structure in GraphViz .dot format.
+	 * @param sb StringBuilder.
+	 * @return StringBuilder with structure of tree in .dot format.
+	 */
 	public StringBuilder toDot(StringBuilder sb) {
 		
+		//If the input StringBuilder is null, start a new String Builder
 		if(sb==null) {sb = new StringBuilder();}
 		
+		//Initialize first as true when sb is first initialized.
 		boolean first = sb.length() == 0;
 		
+		//If first == true, begin adding node and edge information for the current node
+		//to the StringBuilder.
 		if(first) {
+			
+			//First line of a .dot file.
 			sb.append("digraph g{\n");
 		} 
 		
+		//Node information for the .dot file.
 		sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\nID= " + String.format("%.2f", identity) +
 				"\\nAvg= " + String.format("%.2f", averageIdentity()) + "\"]\n");
 		
+		//Iterate over child nodes and recursively call this method
+		//adding node connection to the StringBuilder.
 		for(TreeNode childNode : childNodes) {
 			if(childNode != this) {
 				childNode.toDot(sb);
 			}
 		}
 		
+		//iterate over child nodes and add edge information to the StringBuilder.
 		for(TreeNode childNode : childNodes) {
 			sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
 		}
 		
+		//If first == true, append a final closing curly brace.
 		if(first) {
 			sb.append("}\n");
 		}
