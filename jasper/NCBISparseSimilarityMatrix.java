@@ -66,7 +66,7 @@ public class NCBISparseSimilarityMatrix {
 		//Iterate over the matrix and add an ArrayList<Comparison> to each ArrayList.
 		for(int i=0; i<sparseMatrix.length; i++) {
 			
-			sparseMatrix[i] = new ArrayList<Comparison>();
+			sparseMatrix[i] = new ArrayList<NCBIComparison>();
 			
 		}
 		
@@ -86,22 +86,22 @@ public class NCBISparseSimilarityMatrix {
 					String[] data = line.split("\t");
 					
 					//Column 0 is query name.
-					String queryName = data[0];
+					int queryTaxID = Integer.valueOf(data[7]);
 					
 					//Column 1 is reference name.
-					String refName = data[1];
+					int refTaxID = Integer.valueOf(data[8]);
 					
 					//Column 2 is the similarity percentage.
 					double similarity = Double.parseDouble(data[2]);
 					
 					//Check that both names are in the HashMap (too slow?)
-					if(tree.containsName(queryName)==true && tree.containsName(refName)) {
+					if(tree.containsTaxID(queryTaxID)==true && tree.containsTaxID(refTaxID)) {
 						
 						//Get the positions assigned to both organisms.
-						int queryPos = nameToNodeId(queryName);
-						int refPos = nameToNodeId(refName);
+						int queryPos = taxIDToNodeId(queryTaxID);
+						int refPos = taxIDToNodeId(refTaxID);
 						
-						Comparison currentComparison = new Comparison(queryPos, refPos, similarity);
+						NCBIComparison currentComparison = new NCBIComparison(queryPos, refPos, similarity);
 						
 						//Add the similarity percentage to the appropriate matrix position.
 						sparseMatrix[queryPos].add(currentComparison);
@@ -112,20 +112,20 @@ public class NCBISparseSimilarityMatrix {
 	}
 	
 	/**
-	 * Method for taking the node name and returning the node ID value
-	 * @param orgName the organism node name (String).
-	 * @return int The node ID of the organism name taken as input.
+	 * Method for taking the node taxon ID and returning the node value
+	 * @param taxID the organism taxon ID (int).
+	 * @return NCBITreeNode The node of the organism taxon ID taken as input.
 	 */
-	public int nameToNodeId(String orgName) {
+	public int taxIDToNodeId(int taxID) {
 		
-		//Get the node associated with the input name.
-		TreeNode org = tree.getNode(orgName);
+		//Get node from the tree corresponding to the taxon ID.
+		NCBITreeNode orgNode = tree.nodeMap.get(taxID);
 		
 		//Asserts the org nod is in the tree.
-		assert(org != null) : orgName;
+		assert(orgNode != null) : taxID;
 		
 		//Return the int node ID.
-		return org.nodeId;
+		return orgNode.nodeId;
 	}
 	
 	
@@ -168,8 +168,8 @@ public class NCBISparseSimilarityMatrix {
 	}
 	
 	
-	public ArrayList<Comparison> getOrgRow(String orgName) {
-		int rowNum = tree.nodeMap.get(orgName).nodeId;
+	public ArrayList<NCBIComparison> getOrgRow(Integer keyOrg) {
+		int rowNum = tree.nodeMap.get(keyOrg).nodeId;
 		return sparseMatrix[rowNum];
 	}
 	
@@ -187,7 +187,7 @@ public class NCBISparseSimilarityMatrix {
 	/**
 	 * An arraylist containing comparisons between nodes in the tree.
 	 */
-	private final ArrayList<Comparison>[] sparseMatrix;
+	private final ArrayList<NCBIComparison>[] sparseMatrix;
 	
 	/**
 	 * The number of sketches being analyzed.

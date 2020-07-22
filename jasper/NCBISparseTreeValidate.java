@@ -131,7 +131,11 @@ public class NCBISparseTreeValidate {
 		//Pass input file to Tree class to create tree
 		NCBISparseTree relationshipTree=new NCBISparseTree(tree);
 		
-		assert false;
+		relationshipTree.beginTraverse(1);
+		
+		//System.out.println(relationshipTree.orgCount);
+		
+		//System.out.println(relationshipTree.toString());
 		
 		//Pass similarity file to create similarity matrix object
 		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree);
@@ -143,7 +147,7 @@ public class NCBISparseTreeValidate {
 		
 		//Traverse the tree and add levels to all nodes.
 		//Hardcoded to start at node "0" or "life" node.
-		relationshipTree.beginTraverse("0");
+		relationshipTree.beginTraverse(1);
 		
 		//Sets the identities by beginning at a particular node and working backwards.
 		//relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
@@ -208,13 +212,13 @@ public class NCBISparseTreeValidate {
 	void checkSimilarities(NCBISparseTree tree, NCBISparseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
-		for ( String keyOrg : tree.keySet() ) {
+		for ( Integer keyOrg : tree.keySet() ) {
 
 			//If the organism isn't the life/0 node.
 			if(!keyOrg.equals("0")) {
 
 				//Get the node from the tree
-				TreeNode keyNode = tree.getNode(keyOrg);
+				NCBITreeNode keyNode = tree.getNode(keyOrg);
 
 				//Reset the identity values of the TreeNodes
 				//This is done so all identity values are relative to the current keyNode.
@@ -249,20 +253,20 @@ public class NCBISparseTreeValidate {
 				if(keyNode.parentNode.averageIdentity() != 0.0) {
 
 					//Identify parent node.
-					String parentName = keyNode.getParentName();
+					int parentName = keyNode.getParentName();
 					
 					//Get parent node ID
 					//int parentID = tree.getNode(parentName).getNodeId();
 
 					//Get the row of similarity values associated with
 					//the key node and each other node.
-					ArrayList<Comparison> keyOrgRow = matrix.getOrgRow(keyOrg);
+					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRow(keyOrg);
 
 					//Iterate over the node organism names.
-					for(Comparison rowOrgComparison : keyOrgRow) {
+					for(NCBIComparison rowOrgComparison : keyOrgRow) {
 						
 						//Get the node being iterated over in the tree.
-						TreeNode matrixOrgNode = tree.getNode(rowOrgComparison.refID);
+						NCBITreeNode matrixOrgNode = tree.getNode(rowOrgComparison.refID);
 
 						//if we aren't comparing similarities of the node to itself and
 						//if we aren't examining a child node and
