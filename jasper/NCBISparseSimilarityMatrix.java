@@ -59,6 +59,7 @@ public class NCBISparseSimilarityMatrix {
 		
 		//Get the total number of organisms in the tree.
 		orgCount = tree.getOrgCount();
+		//System.out.println(orgCount);
 		
 		//Initialize the matrix with the appropriate size of all nodes.
 		sparseMatrix = new ArrayList[orgCount + 1];
@@ -168,11 +169,15 @@ public class NCBISparseSimilarityMatrix {
 	}
 	
 	
-	public ArrayList<NCBIComparison> getOrgRow(Integer keyOrg) {
-		int rowNum = tree.nodeMap.get(keyOrg).nodeId;
+	public ArrayList<NCBIComparison> getOrgRow(Integer taxonID) {
+		int rowNum = tree.nodeMap.get(taxonID).nodeId;
 		return sparseMatrix[rowNum];
 	}
 	
+	
+	public int numComparisons(int taxonID_) {
+		return getOrgRow(taxonID_).size();
+	}
 
 	
 	/*--------------------------------------------------------------*/

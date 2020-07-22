@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import shared.Tools;
+
 
 public class NCBISparseTree {
 	
@@ -42,8 +44,8 @@ public class NCBISparseTree {
 	        	//if line is the header line, split and assign to variable.
 	        	if(line.startsWith("#")) {header=line.split("\t");
 	        	} else {
-	        		String[] data = line.split("\t");
-	        		//System.out.println(data[0]);
+	        		//String[] data = line.split("\t");
+	        		String[] data = Tools.tabPattern.split(line);
 
 	        		//Make sure you're not adding the header line to any data structure
 	        		//if(!Arrays.asList(header).contains(data[0])) {
@@ -53,11 +55,11 @@ public class NCBISparseTree {
 
 	        		int taxID = Integer.valueOf(data[0]);
 	        		int parentTaxID = Integer.valueOf(data[2]);
-	        		String rank = data[4];
+	        		String taxonomicRank = data[4];
 
-	        		NCBITreeNode orgNode = new NCBITreeNode(taxID, data[0], parentTaxID, nodeId);
+	        		NCBITreeNode orgNode = new NCBITreeNode(taxID, data[0], parentTaxID, nodeId, taxonomicRank);
 
-	        		if(nodeId == 0) {root = orgNode;}
+	        		if(nodeId == 1) {root = orgNode;}
 
 	        		nodeId++;
 
@@ -98,7 +100,8 @@ public class NCBISparseTree {
 		
 		//iterate over lines from the file and split into the organism and the parent node
 		for(String line : lineList) {
-			String[] split=line.split("\t");
+			//String[] split=line.split("\t");
+			String[] split = Tools.tabPattern.split(line);
 			
 			//isolate the organism and the parent from the split
 			org = Integer.valueOf(split[0]);
@@ -110,7 +113,7 @@ public class NCBISparseTree {
 			NCBITreeNode parNode = treeNodeMap.get(par);
 			
 			//Assert parent node isn't empty or parent node is the 0/life node.
-			assert(parNode != null || par == 0);
+			assert(parNode != null || par == 1);
 			
 			//Assert the query organism node isn't empty, if it is, return node name.
 			assert(orgNode != null): org;
@@ -159,7 +162,7 @@ public class NCBISparseTree {
 	 */
 	public void beginTraverse(int nodeID_) {
 		NCBITreeNode firstNode = nodeMap.get(nodeID_);
-		firstNode.traverse(0);
+		firstNode.traverse(1);
 	}
 	
 	/**
@@ -227,7 +230,7 @@ public class NCBISparseTree {
 	public int getOrgCount() {
 		
 		//Return the size of the Set of keys in the nodeMap HashMap.
-		return nodeMap.keySet().size();
+		return nodeList.size();
 	}
 	
 	/**
@@ -239,6 +242,8 @@ public class NCBISparseTree {
 		
 		//Get the row containing all Comparisons for the query node.
 		ArrayList<NCBIComparison> row = matrix.getOrgRow(keyNode.taxID);
+		
+		int votes = NCBISparseTreeValidate.MAX_VOTES;
 		
 		//Iterate over the row.
 		for(int i=0; i<row.size(); i++) {
@@ -255,7 +260,8 @@ public class NCBISparseTree {
 			//Set the other nodes identity to the value in the comparison.
 			otherNode.identity = c.identity;
 			
-			
+			otherNode.votes = votes;
+			votes = Tools.max(votes - 1, 0);
 			
 		}
 	}
@@ -266,6 +272,9 @@ public class NCBISparseTree {
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
+	/**
+	 * Root node of the tree. Usually the "life" node or node 1 in NCBI.
+	 */
 	NCBITreeNode root;
 	
 	/**
@@ -274,22 +283,35 @@ public class NCBISparseTree {
 	 */
 	HashMap<Integer, NCBITreeNode> nodeMap = new HashMap<Integer, NCBITreeNode>();
 	
+	/**
+	 * ArrayList of NCBITreeNode objects.
+	 */
 	ArrayList<NCBITreeNode> nodeList = new ArrayList<NCBITreeNode>();
 		
-	//ArrayList of all lines in input file. need these later to fill in values for children nodes
+	/**
+	 * ArrayList of all lines in input file. Need these to fill in values for children nodes
+	 */
 	ArrayList<String> lines = new ArrayList<String>();
 	
-	//Header line of input file
+	/**
+	 * Header line of input file.
+	 */
 	private String[] header;
 	
-	//Input file name
+	/**
+	 * Input file name.
+	 */
 	private String in=null;
 	
-	//Number of lines processed for data from input file
+	/**
+	 * Number of lines processed for data from input file.
+	 */
 	private long linesProcessed=0;
 	
-	//Node level counter
+	/**
+	 * Node level counter.
+	 */
 	int orgLvl = 0;
 	
-	int orgCount = 0;
+	//int orgCount = 0;
 }

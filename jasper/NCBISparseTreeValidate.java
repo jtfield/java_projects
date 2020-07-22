@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -131,19 +132,13 @@ public class NCBISparseTreeValidate {
 		//Pass input file to Tree class to create tree
 		NCBISparseTree relationshipTree=new NCBISparseTree(tree);
 		
-		relationshipTree.beginTraverse(1);
-		
-		//System.out.println(relationshipTree.orgCount);
-		
-		//System.out.println(relationshipTree.toString());
+		System.out.println(relationshipTree.getOrgCount());
 		
 		//Pass similarity file to create similarity matrix object
 		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree);
 		
 		//Add parent node similarity percentages to each node in the tree.
 		//addRelationSims(relationshipTree, matrix);
-		
-		System.out.println(relationshipTree.getNode(5));
 		
 		//Traverse the tree and add levels to all nodes.
 		//Hardcoded to start at node "0" or "life" node.
@@ -212,13 +207,15 @@ public class NCBISparseTreeValidate {
 	void checkSimilarities(NCBISparseTree tree, NCBISparseSimilarityMatrix matrix) {
 
 		//Iterate over organisms/nodes in the tree.
-		for ( Integer keyOrg : tree.keySet() ) {
+		for ( Integer keyTaxonID : tree.keySet() ) {
 
 			//If the organism isn't the life/0 node.
-			if(!keyOrg.equals("0")) {
+			//NCBI taxon ID == 1.
+			//Node ID == 0.
+			if(!keyTaxonID.equals(1) && matrix.numComparisons(keyTaxonID) > 0) {
 
 				//Get the node from the tree
-				NCBITreeNode keyNode = tree.getNode(keyOrg);
+				NCBITreeNode keyNode = tree.getNode(keyTaxonID);
 
 				//Reset the identity values of the TreeNodes
 				//This is done so all identity values are relative to the current keyNode.
@@ -260,8 +257,24 @@ public class NCBISparseTreeValidate {
 
 					//Get the row of similarity values associated with
 					//the key node and each other node.
-					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRow(keyOrg);
+					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRow(keyTaxonID);
+					
+					
+					System.out.println(keyOrgRow.size());
+					
+					Collections.sort(keyOrgRow);
+					int i = 0;
+					for(NCBIComparison comp : keyOrgRow) {
+						System.out.println(comp.identity);
+						System.out.println(comp.queryID);
+						System.out.println(comp.refID);
+						System.out.println(i);
+						System.out.println();
+						i++;
+					}
 
+					//assert false;
+					
 					//Iterate over the node organism names.
 					for(NCBIComparison rowOrgComparison : keyOrgRow) {
 						
@@ -285,7 +298,7 @@ public class NCBISparseTreeValidate {
 								//TODO: fix flagged node handling
 								System.out.println();
 								System.out.println("problem");
-								System.out.println("key org " + keyOrg);
+								System.out.println("key org " + keyTaxonID);
 
 								System.out.println("par name " + parentName);
 								System.out.println("other org " + rowOrgComparison);
@@ -397,6 +410,7 @@ public class NCBISparseTreeValidate {
 	private long bytesProcessed=0;
 	private long bytesOut=0;
 	private long taxa=0;
+	public static int MAX_VOTES=20;
 	
 	/*--------------------------------------------------------------*/
 	/*----------------         Final Fields         ----------------*/

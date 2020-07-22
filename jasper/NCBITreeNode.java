@@ -8,18 +8,22 @@ import java.util.List;
 public class NCBITreeNode {
 	
 	/**
-	 * Creates an object of class TreeNode
-	 * 
-	 * @param taxID The name of the organism in this node
-	 * @param olds The name of the parent node
+	 * Class of object NCBITreeNode. Contains the taxon ID number, name, parent node, node ID within the tree
+	 * and the Taxonomic rank of the node.
+	 * @param taxID int Taxon ID.
+	 * @param name String Name of node.
+	 * @param parentNode_ int Parent node ID.
+	 * @param nodeId int Node ID within the tree, separate from taxon ID.
+	 * @param taxonomicRank_ String Corresponds to something like genus, phylum, kingdom, etc.
 	 */
-	public NCBITreeNode(int taxID, String name, int olds, int nodeId) {
+	public NCBITreeNode(int taxID, String name, int parentNode_, int nodeId, String taxonomicRank_) {
 	    //this.taxId = id;
 	    this.taxID = taxID;
 	    //this.children = kids;
-	    this.parentID = olds;
+	    this.parentID = parentNode_;
 	    this.nodeId = nodeId;
 	    this.orgName = name;
+	    this.taxonomicRank = taxonomicRank_;
 	    
     }
 	
@@ -229,6 +233,7 @@ public class NCBITreeNode {
 		identitySum = 0;
 		nodesWithIdentity = 0;
 		sizeSum = 0;
+		votes = 0;
 		
 
 		for(NCBITreeNode childNode : childNodes) {
@@ -266,7 +271,8 @@ public class NCBITreeNode {
 				nodesWithIdentity+=childNode.nodesWithIdentity;
 				identitySum+=childNode.identitySum;
 				sizeSum+=childNode.sizeSum;
-
+				votes += childNode.votes;
+				
 			}
 		}
 	}
@@ -335,8 +341,10 @@ public class NCBITreeNode {
 		} 
 		
 		//Node information for the .dot file.
-		sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\nID= " + String.format("%.2f", identity) +
-				"\\nAvg= " + String.format("%.2f", averageIdentity()) + "\"]\n");
+		sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\n"
+				+ "ID= " + String.format("%.2f", identity) +"\\n"
+				+ "Avg= " + String.format("%.2f", averageIdentity()) 
+				+ "\\n" + "Votes = " + votes + "\"]\n");
 		
 		//Iterate over child nodes and recursively call this method
 		//adding node connection to the StringBuilder.
@@ -411,6 +419,8 @@ public class NCBITreeNode {
 	 */
 	final int nodeId;
 	
+	String taxonomicRank;
+	
 	/**
 	 * HashSet of direct children of this node.
 	 */
@@ -453,4 +463,6 @@ public class NCBITreeNode {
 	long nodesWithIdentity = 0;
 	
 	long sizeSum = 0;
+	
+	int votes = 0;
 }
