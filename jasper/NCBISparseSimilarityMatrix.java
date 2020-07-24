@@ -26,7 +26,7 @@ public class NCBISparseSimilarityMatrix {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public NCBISparseSimilarityMatrix(String inputFile, NCBISparseTree tree_) throws FileNotFoundException, IOException {
+	public NCBISparseSimilarityMatrix(String inputFile, NCBISparseTree tree_, boolean ncbi) throws FileNotFoundException, IOException {
 
 		//Assigns the input tree object to the tree variable.
 		tree = tree_;
@@ -34,28 +34,28 @@ public class NCBISparseSimilarityMatrix {
 		//Take file name as input for building tree of related nodes
 		in = inputFile;
 
-		//Read in file, add header line and add to header variable
-		try (BufferedReader br = new BufferedReader(new FileReader(in))) {
-			String line;
-
-			//while line isn't empty, process
-			while ((line = br.readLine()) != null) {
-
-				//if line is the header line, split and assign to variable.
-				//may be used when header becomes more complex
-				if(line.startsWith("#")) {header=line.split("\t");
-				} else {
-
-					//If not a header line, split on tab.
-					String[] data = line.split("\t");
-
-					//Query organism is column 0.
-					String queryName = data[0];
-					//String refName = data[1];
-
-				}
-			}
-		}
+//		//Read in file, add header line and add to header variable
+//		try (BufferedReader br = new BufferedReader(new FileReader(in))) {
+//			String line;
+//
+//			//while line isn't empty, process
+//			while ((line = br.readLine()) != null) {
+//
+//				//if line is the header line, split and assign to variable.
+//				//may be used when header becomes more complex
+//				if(line.startsWith("#")) {header=line.split("\t");
+//				} else {
+//
+//					//If not a header line, split on tab.
+//					String[] data = line.split("\t");
+//
+//					//Query organism is column 0.
+//					String queryName = data[0];
+//					//String refName = data[1];
+//
+//				}
+//			}
+//		}
 		
 		//Get the total number of organisms in the tree.
 		orgCount = tree.getOrgCount();
@@ -68,6 +68,7 @@ public class NCBISparseSimilarityMatrix {
 		for(int i=0; i<sparseMatrix.length; i++) {
 			
 			sparseMatrix[i] = new ArrayList<NCBIComparison>();
+			//System.out.println("Building matrix row");
 			
 		}
 		
@@ -86,17 +87,36 @@ public class NCBISparseSimilarityMatrix {
 					//If not a header line, split on tab.
 					String[] data = line.split("\t");
 					
-					//Column 0 is query name.
-					int queryTaxID = Integer.valueOf(data[7]);
+					//System.out.println(line);
+					int queryTaxID = 0;
+					int refTaxID = 0;
 					
-					//Column 1 is reference name.
-					int refTaxID = Integer.valueOf(data[8]);
+					//Section handles the position of the taxon ID numbers the output
+					//of sketchsimilarities.
+					//in the NCBI nodes.dmp structure and a test dataset structure.
+					if(ncbi==true) {
+
+						//Column 8 is query ID.
+						queryTaxID = Integer.valueOf(data[7]);
+
+						//Column 9 is reference ID.
+						refTaxID = Integer.valueOf(data[8]);
+						
+					}else if(ncbi==false) {
+						
+						//Column 0 is query ID.
+						queryTaxID = Integer.valueOf(data[0]);
+						
+						//Column 1 is reference ID.
+						refTaxID = Integer.valueOf(data[1]);
+						
+					}
 					
 					//Column 2 is the similarity percentage.
 					double similarity = Double.parseDouble(data[2]);
 					
 					//Check that both names are in the HashMap (too slow?)
-					if(tree.containsTaxID(queryTaxID)==true && tree.containsTaxID(refTaxID)) {
+					if(tree.containsTaxID(queryTaxID)==true && tree.containsTaxID(refTaxID)==true) {
 						
 						//Get the positions assigned to both organisms.
 						int queryPos = taxIDToNodeId(queryTaxID);
@@ -169,14 +189,14 @@ public class NCBISparseSimilarityMatrix {
 	}
 	
 	
-	public ArrayList<NCBIComparison> getOrgRow(Integer taxonID) {
+	public ArrayList<NCBIComparison> getOrgRowByTaxonID(Integer taxonID) {
 		int rowNum = tree.nodeMap.get(taxonID).nodeId;
 		return sparseMatrix[rowNum];
 	}
 	
 	
-	public int numComparisons(int taxonID_) {
-		return getOrgRow(taxonID_).size();
+	public int numComparisonsByTaxonID(int taxonID_) {
+		return getOrgRowByTaxonID(taxonID_).size();
 	}
 
 	

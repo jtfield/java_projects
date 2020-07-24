@@ -167,11 +167,11 @@ public class NCBISparseTree {
 	
 	/**
 	 * Returns TreeNode from tree based on String node name.
-	 * @param nodeName String name of node (organism/file)
+	 * @param TaxonID String name of node (organism/file)
 	 * @return TreeNode.
 	 */
-	public NCBITreeNode getNode(String nodeName) {
-		return nodeMap.get(nodeName);
+	public NCBITreeNode getNodeByTaxID(int TaxonID) {
+		return nodeMap.get(TaxonID);
 	}
 	
 	/**
@@ -179,7 +179,7 @@ public class NCBISparseTree {
 	 * @param nodeID int nodeId
 	 * @return TreeNode.
 	 */
-	public NCBITreeNode getNode(int nodeID) {
+	public NCBITreeNode getNodeByNodeID(int nodeID) {
 		return nodeList.get(nodeID);
 	}
 	
@@ -241,7 +241,7 @@ public class NCBISparseTree {
 	public void setIdentity(NCBITreeNode keyNode, NCBISparseSimilarityMatrix matrix) {
 		
 		//Get the row containing all Comparisons for the query node.
-		ArrayList<NCBIComparison> row = matrix.getOrgRow(keyNode.taxID);
+		ArrayList<NCBIComparison> row = matrix.getOrgRowByTaxonID(keyNode.taxID);
 		
 		int votes = NCBISparseTreeValidate.MAX_VOTES;
 		
@@ -252,7 +252,7 @@ public class NCBISparseTree {
 			NCBIComparison c = row.get(i);
 			
 			//Get the other nodes ID from the Comparison object.
-			int otherNodeId = c.refID;
+			int otherNodeId = c.refNodeID;
 			
 			//Get the TreeNode of the node being compared to the query node.
 			NCBITreeNode otherNode = nodeList.get(otherNodeId);

@@ -14,7 +14,7 @@ public class NCBIComparison implements Comparable<NCBIComparison> {
 		this.queryID = queryID_;
 		
 		//Set the refID as the input value
-		this.refID = refID_;
+		this.refNodeID = refID_;
 		
 		//Set the identity as the input value
 		this.identity = identity_;
@@ -25,7 +25,7 @@ public class NCBIComparison implements Comparable<NCBIComparison> {
 	 * toString method to return the queryID, the refID and the similarity with some formatting.
 	 */
 	public String toString() {
-		return "Query node ID = " + queryID + ", Reference node ID = " + refID + 
+		return "Query node ID = " + queryID + ", Reference node ID = " + refNodeID + 
 				", Similarity identity = " + identity;
 	}
 	
@@ -57,7 +57,7 @@ public class NCBIComparison implements Comparable<NCBIComparison> {
 	/**
 	 * Node being compared to the queryID node.
 	 */
-	int refID;
+	int refNodeID;
 	
 	/**
 	 * Similarity between the queryID node and the refID node.

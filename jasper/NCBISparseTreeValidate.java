@@ -90,6 +90,13 @@ public class NCBISparseTreeValidate {
 			}else if(a.equals("tree")){
 				tree=b;
 				
+			}else if(a.equals("test")) {
+				test=true;
+				ncbi=false;
+				
+//			}else if(a.equals("ncbi")) {
+//				ncbi=true;
+				
 			//Tells program to write tree graphs in .dot format.
 			}else if(a.equals("writetrees")) {
 				writeTrees = true;
@@ -134,8 +141,12 @@ public class NCBISparseTreeValidate {
 		
 		System.out.println(relationshipTree.getOrgCount());
 		
+		//System.out.println(relationshipTree.getNode(3).taxonomicRank);
+		
 		//Pass similarity file to create similarity matrix object
-		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree);
+		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree, ncbi);
+		
+		//System.out.println(matrix.getSize());
 		
 		//Add parent node similarity percentages to each node in the tree.
 		//addRelationSims(relationshipTree, matrix);
@@ -205,18 +216,23 @@ public class NCBISparseTreeValidate {
 	 * @param matrix The sparse similarity matrix containing all possible pairwise similarity values.
 	 */
 	void checkSimilarities(NCBISparseTree tree, NCBISparseSimilarityMatrix matrix) {
-
+		
+		System.out.println("Begining to compare sequence similarity values to the stated tree structure.");
 		//Iterate over organisms/nodes in the tree.
-		for ( Integer keyTaxonID : tree.keySet() ) {
+		//for ( Integer keyTaxonID : tree.keySet() ) {
+		for(NCBITreeNode keyNode1 : tree.nodeList) {
 
+			Integer keyTaxonID = keyNode1.taxID;
+			
+			//System.out.println(keyTaxonID);
 			//If the organism isn't the life/0 node.
 			//NCBI taxon ID == 1.
 			//Node ID == 0.
-			if(!keyTaxonID.equals(1) && matrix.numComparisons(keyTaxonID) > 0) {
+			if(!keyTaxonID.equals(1) && matrix.numComparisonsByTaxonID(keyTaxonID) > 0) {
 
 				//Get the node from the tree
-				NCBITreeNode keyNode = tree.getNode(keyTaxonID);
-
+				NCBITreeNode keyNode = tree.getNodeByTaxID(keyTaxonID);
+				
 				//Reset the identity values of the TreeNodes
 				//This is done so all identity values are relative to the current keyNode.
 				tree.root.resetIdentity();
@@ -228,6 +244,7 @@ public class NCBISparseTreeValidate {
 				//relative to the current keyNode.
 				tree.root.percolateIdentityUp(keyNode.nodeId);
 				
+				//System.out.println(keyNode.nodeId);
 				//System.out.println(tree.root.toDot());
 				
 				//Handle writing tree relationships in .dot format.
@@ -247,6 +264,7 @@ public class NCBISparseTreeValidate {
 				}
 				//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
 				//TODO: if there are no sibling nodes, the parent sim could be 0.
+				//System.out.println("Verifying parent node isn't missing an average identity.");
 				if(keyNode.parentNode.averageIdentity() != 0.0) {
 
 					//Identify parent node.
@@ -257,30 +275,36 @@ public class NCBISparseTreeValidate {
 
 					//Get the row of similarity values associated with
 					//the key node and each other node.
-					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRow(keyTaxonID);
+					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRowByTaxonID(keyTaxonID);
 					
 					
-					System.out.println(keyOrgRow.size());
+					//System.out.println(keyOrgRow.size());
 					
 					Collections.sort(keyOrgRow);
-					int i = 0;
-					for(NCBIComparison comp : keyOrgRow) {
-						System.out.println(comp.identity);
-						System.out.println(comp.queryID);
-						System.out.println(comp.refID);
-						System.out.println(i);
-						System.out.println();
-						i++;
-					}
+
+//					Only included to test ordering of comparisons.
+//					int i = 0;
+//					for(NCBIComparison comp : keyOrgRow) {
+//						System.out.println(comp.identity);
+//						System.out.println(comp.queryID);
+//						System.out.println(comp.refID);
+//						System.out.println(i);
+//						System.out.println();
+//						i++;
+//					}
 
 					//assert false;
 					
 					//Iterate over the node organism names.
 					for(NCBIComparison rowOrgComparison : keyOrgRow) {
 						
+						//CURRENTLY GETTING MESSED UP HERE
+						//USING NODE ID TO GET NODE ID.
 						//Get the node being iterated over in the tree.
-						NCBITreeNode matrixOrgNode = tree.getNode(rowOrgComparison.refID);
-
+						//NCBITreeNode matrixOrgNode = tree.getNodeByTaxID(rowOrgComparison.refNodeID);
+						
+						NCBITreeNode matrixOrgNode = tree.getNodeByNodeID(rowOrgComparison.refNodeID);
+						
 						//if we aren't comparing similarities of the node to itself and
 						//if we aren't examining a child node and
 						//if we aren't examining a parent node
@@ -402,6 +426,10 @@ public class NCBISparseTreeValidate {
 	 * If present in commandline args, set to true.
 	 */
 	private boolean writeTrees = false;
+	
+	private boolean test=false;
+	
+	private boolean ncbi=true;
 	
 	/*--------------------------------------------------------------*/
 	
