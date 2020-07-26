@@ -59,7 +59,7 @@ public class NCBISparseTree {
 
 	        		NCBITreeNode orgNode = new NCBITreeNode(taxID, data[0], parentTaxID, nodeId, taxonomicRank);
 
-	        		if(nodeId == 1) {root = orgNode;}
+	        		if(nodeId == 0) {root = orgNode;}
 
 	        		nodeId++;
 
@@ -162,7 +162,7 @@ public class NCBISparseTree {
 	 */
 	public void beginTraverse(int nodeID_) {
 		NCBITreeNode firstNode = nodeMap.get(nodeID_);
-		firstNode.traverse(1);
+		firstNode.assignLevels(1, "life");
 	}
 	
 	/**

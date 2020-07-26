@@ -88,22 +88,27 @@ public class NCBISparseTreeValidate {
 			
 			//Handle tree file variable assignment.
 			}else if(a.equals("tree")){
-				tree=b;
+				treeFileName=b;
 				
 			}else if(a.equals("test")) {
 				test=true;
 				ncbi=false;
 				
-//			}else if(a.equals("ncbi")) {
-//				ncbi=true;
+			}else if(a.equals("mode")) {
+				if(b == "average"){mode=AVERAGE_IDENTITY_MODE;}
+				else if(b == "identity") {mode=IDENTITY_MODE;}
+				else if(b == "vote") {mode=VOTE_MODE;}
 				
 			//Tells program to write tree graphs in .dot format.
 			}else if(a.equals("writetrees")) {
 				writeTrees = true;
+				
+			}else if(a.equals("allnodes")) {
+				printAllNodes = true;
 	
 			//If writetrees is true and the path to an output dir is included
 			//set variable to the path to the desired directory
-			}else if(a.equals("outpath") && writeTrees == true) {
+			}else if(a.equals("outpath")) {
 				outpath=b;
 				if(outpath.endsWith("/")) {System.out.println("output path correct");}
 				else {outpath = outpath + "/";}
@@ -137,14 +142,18 @@ public class NCBISparseTreeValidate {
 	void process(Timer t) throws FileNotFoundException, IOException{
 		
 		//Pass input file to Tree class to create tree
-		NCBISparseTree relationshipTree=new NCBISparseTree(tree);
+		tree=new NCBISparseTree(treeFileName);
 		
-		System.out.println(relationshipTree.getOrgCount());
+		System.out.println(tree.getOrgCount());
+		
+		System.out.println("Mode of analysis: " + mode);
+		
+		System.out.println("If writing out trees, write all nodes: " + printAllNodes);
 		
 		//System.out.println(relationshipTree.getNode(3).taxonomicRank);
 		
 		//Pass similarity file to create similarity matrix object
-		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, relationshipTree, ncbi);
+		NCBISparseSimilarityMatrix matrix=new NCBISparseSimilarityMatrix(sim, tree, ncbi);
 		
 		//System.out.println(matrix.getSize());
 		
@@ -153,7 +162,7 @@ public class NCBISparseTreeValidate {
 		
 		//Traverse the tree and add levels to all nodes.
 		//Hardcoded to start at node "0" or "life" node.
-		relationshipTree.beginTraverse(1);
+		tree.beginTraverse(1);
 		
 		//Sets the identities by beginning at a particular node and working backwards.
 		//relationshipTree.setIdentity(relationshipTree.getNode(10), matrix);
@@ -162,7 +171,7 @@ public class NCBISparseTreeValidate {
 		//relationshipTree.root.percolateIdentityUp(10);
 		
 		//Check similarities.
-		checkSimilarities(relationshipTree, matrix);
+		checkSimilarities(tree, matrix);
 		
 		//System.out.println(relationshipTree);
 		
@@ -220,18 +229,15 @@ public class NCBISparseTreeValidate {
 		System.out.println("Begining to compare sequence similarity values to the stated tree structure.");
 		//Iterate over organisms/nodes in the tree.
 		//for ( Integer keyTaxonID : tree.keySet() ) {
-		for(NCBITreeNode keyNode1 : tree.nodeList) {
+		for(NCBITreeNode keyNode : tree.nodeList) {
 
-			Integer keyTaxonID = keyNode1.taxID;
+			Integer keyTaxonID = keyNode.taxID;
 			
 			//System.out.println(keyTaxonID);
 			//If the organism isn't the life/0 node.
 			//NCBI taxon ID == 1.
 			//Node ID == 0.
 			if(!keyTaxonID.equals(1) && matrix.numComparisonsByTaxonID(keyTaxonID) > 0) {
-
-				//Get the node from the tree
-				NCBITreeNode keyNode = tree.getNodeByTaxID(keyTaxonID);
 				
 				//Reset the identity values of the TreeNodes
 				//This is done so all identity values are relative to the current keyNode.
@@ -243,13 +249,10 @@ public class NCBISparseTreeValidate {
 				//Percolate the average identities of each node upwards through the tree
 				//relative to the current keyNode.
 				tree.root.percolateIdentityUp(keyNode.nodeId);
-				
-				//System.out.println(keyNode.nodeId);
-				//System.out.println(tree.root.toDot());
-				
+			
 				//Handle writing tree relationships in .dot format.
 				//If selected by user.
-				if(writeTrees == true) {
+				if(writeTrees == true && outpath != null) {
 					
 					//Creates the tree output file name along with the path to the desired directory.
 					String currentTreeName = outpath + "SimilarityTree_" + keyNode.orgName + "_.dot";
@@ -258,89 +261,119 @@ public class NCBISparseTreeValidate {
 					createFile(currentTreeName);
 
 					//Write the .dot formatted tree to the file.
-					writeToFile(currentTreeName, tree.root.toDot());
+					writeToFile(currentTreeName, tree.root.toDot(printAllNodes));
 
 					//assert false;
 				}
-				//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
-				//TODO: if there are no sibling nodes, the parent sim could be 0.
-				//System.out.println("Verifying parent node isn't missing an average identity.");
-				if(keyNode.parentNode.averageIdentity() != 0.0) {
-
-					//Identify parent node.
-					int parentName = keyNode.getParentName();
+				
+				if(mode==AVERAGE_IDENTITY_MODE) {checkSimilaritiesForOneNode(keyNode, matrix);}
+				else if(mode==VOTE_MODE) {
+					NCBITreeNode problemNode = checkVotesForOneNode(keyNode);
 					
-					//Get parent node ID
-					//int parentID = tree.getNode(parentName).getNodeId();
-
-					//Get the row of similarity values associated with
-					//the key node and each other node.
-					ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRowByTaxonID(keyTaxonID);
+					if(problemNode != null) {System.out.println("Highest problem node for Taxon ID: " + keyNode.taxID + " is: " + problemNode);}
 					
-					
-					//System.out.println(keyOrgRow.size());
-					
-					Collections.sort(keyOrgRow);
-
-//					Only included to test ordering of comparisons.
-//					int i = 0;
-//					for(NCBIComparison comp : keyOrgRow) {
-//						System.out.println(comp.identity);
-//						System.out.println(comp.queryID);
-//						System.out.println(comp.refID);
-//						System.out.println(i);
-//						System.out.println();
-//						i++;
-//					}
-
-					//assert false;
-					
-					//Iterate over the node organism names.
-					for(NCBIComparison rowOrgComparison : keyOrgRow) {
-						
-						//CURRENTLY GETTING MESSED UP HERE
-						//USING NODE ID TO GET NODE ID.
-						//Get the node being iterated over in the tree.
-						//NCBITreeNode matrixOrgNode = tree.getNodeByTaxID(rowOrgComparison.refNodeID);
-						
-						NCBITreeNode matrixOrgNode = tree.getNodeByNodeID(rowOrgComparison.refNodeID);
-						
-						//if we aren't comparing similarities of the node to itself and
-						//if we aren't examining a child node and
-						//if we aren't examining a parent node
-						if(!matrixOrgNode.isDescendantOf(keyNode.parentNode) && 
-								!matrixOrgNode.isAncestorOf(keyNode)) {
-
-							//Get similarity between the key node and any pairwise compared node
-							double matrixOrgSim = rowOrgComparison.identity;
-
-							//If the similarity value is higher than the similarity
-							//between the key node and its parent.
-							if(matrixOrgSim > keyNode.parentSimilarity()) {
-
-								//Currently prints out a bunch of node/similarity info
-								//TODO: fix flagged node handling
-								System.out.println();
-								System.out.println("problem");
-								System.out.println("key org " + keyTaxonID);
-
-								System.out.println("par name " + parentName);
-								System.out.println("other org " + rowOrgComparison);
-								System.out.println("par sim " + keyNode.parentSimilarity());
-
-								System.out.println("matrix sim " + matrixOrgSim);
-
-								//keyNode.flagRelation(rowOrgComparison, matrixOrgSim);
-								System.out.println(keyNode.getFlaggedRelations());
-							}
-
-						}
-					}
-				}
+					}else { throw new RuntimeException("Uknown Mode" + mode);}
+				//checkSimilaritiesForOneNode(keyNode, matrix);
+				
 			}
 		}
 	}
 
+	public NCBITreeNode checkVotesForOneNode(final NCBITreeNode keyNode) {
+		NCBITreeNode current=keyNode.parentNode;
+		
+		NCBITreeNode previous=keyNode;
+		
+		NCBITreeNode highestProblemNode = null;
+		
+		while(current.parentNode != current) {
+			
+			int currentMaxVotes = previous.votes;
+			NCBITreeNode maxChild = previous;
+			
+			for(NCBITreeNode descendantNode : current.childNodes) {
+				
+				if(descendantNode.votes > currentMaxVotes) {
+					
+					currentMaxVotes = descendantNode.votes;
+					maxChild = descendantNode;
+					
+				}
+				
+			}
+			
+			if(maxChild != previous) {
+				
+				current.flaggedNode = true;
+				System.out.println("Problem found at: [" + current.taxID + "] Taxon rank: [" + current.taxonomicRank + "]");
+				highestProblemNode = current;
+			}
+			
+			previous = current;
+			current = current.parentNode;
+			
+		}
+		return highestProblemNode;
+	}
+	
+	
+	public void checkSimilaritiesForOneNode(NCBITreeNode keyNode, NCBISparseSimilarityMatrix matrix) {
+		//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
+		//TODO: if there are no sibling nodes, the parent sim could be 0.
+		if(keyNode.parentNode.averageIdentity() != 0.0) {
+
+			//Get the row of similarity values associated with
+			//the key node and each other node.
+			ArrayList<NCBIComparison> keyOrgRow = matrix.getOrgRowByTaxonID(keyNode.taxID);
+			
+			Collections.sort(keyOrgRow);
+			
+			//Iterate over the node organism names.
+			for(NCBIComparison rowOrgComparison : keyOrgRow) {
+				
+				NCBITreeNode matrixOrgNode = tree.getNodeByNodeID(rowOrgComparison.refNodeID);
+				
+				boolean b = isSuspicious(keyNode, matrixOrgNode, rowOrgComparison);
+				keyNode.flaggedNode = b;
+				if(b) {
+					printSuspicious(keyNode, rowOrgComparison, matrixOrgNode);
+				}
+			}
+		}
+	}
+	
+	public boolean isSuspicious(NCBITreeNode keyNode, NCBITreeNode matrixOrgNode, NCBIComparison rowOrgComparison) {
+		
+		if(!matrixOrgNode.isDescendantOf(keyNode.parentNode) && 
+				!matrixOrgNode.isAncestorOf(keyNode)) {
+
+			//Get similarity between the key node and any pairwise compared node
+			double matrixOrgSim = rowOrgComparison.identity;
+
+			//If the similarity value is higher than the similarity
+			//between the key node and its parent.
+			if(matrixOrgSim > keyNode.parentSimilarity()) {
+
+				return true;
+			}
+
+		}
+		return false;
+	}
+	
+	public void printSuspicious(NCBITreeNode keyNode, NCBIComparison rowOrgComparison, NCBITreeNode matrixOrgNode) {
+		System.out.println();
+		System.out.println("problem");
+		System.out.println("key org taxon ID " + keyNode.taxID);
+		System.out.println("matrix org " + matrixOrgNode.taxID);
+		System.out.println("par org taxon ID " + keyNode.getParentTaxonID());
+		System.out.println("other org " + rowOrgComparison);
+		System.out.println("par sim " + keyNode.parentSimilarity());
+
+		System.out.println("matrix sim " + rowOrgComparison.identity);
+	}
+	
+	
 	/**
 	 * Method for creating a file with an input file name.
 	 * @param fileName String for the file name.
@@ -396,7 +429,6 @@ public class NCBISparseTreeValidate {
 		}
 	}
 	
-	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
@@ -409,7 +441,7 @@ public class NCBISparseTreeValidate {
 	/**
 	 * Tree file containing taxonomic relationships.
 	 */
-	private String tree=null;
+	private String treeFileName=null;
 	
 	/**
 	 * Output file name.
@@ -431,6 +463,12 @@ public class NCBISparseTreeValidate {
 	
 	private boolean ncbi=true;
 	
+	private int mode=VOTE_MODE;
+	
+	private NCBISparseTree tree = null;
+	
+	private boolean printAllNodes = false;
+	
 	/*--------------------------------------------------------------*/
 	
 	private long linesProcessed=0;
@@ -438,7 +476,14 @@ public class NCBISparseTreeValidate {
 	private long bytesProcessed=0;
 	private long bytesOut=0;
 	private long taxa=0;
+	
+	/*--------------------------------------------------------------*/
+	
 	public static int MAX_VOTES=20;
+	public static final int VOTE_MODE=0;
+	public static final int IDENTITY_MODE=1;
+	public static final int AVERAGE_IDENTITY_MODE=2;
+	
 	
 	/*--------------------------------------------------------------*/
 	/*----------------         Final Fields         ----------------*/

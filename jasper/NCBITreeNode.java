@@ -80,7 +80,7 @@ public class NCBITreeNode {
 	 * 
 	 * @return parent The name of the parent node.
 	 */
-	public int getParentName() {
+	public int getParentTaxonID() {
 	      return parentID;
 	   }
 	
@@ -88,9 +88,9 @@ public class NCBITreeNode {
 	 * Returns a string of the structure <Organism name>, <Parent Organism/node name>, <Child node names if any>.
 	 */
 	public String toString() {
-		return "Name = " + taxID + ", Parent = " + parentID + ", Child names = " + childIDs + ", Level = " + level
-				+ ", Nodes with identity = " + nodesWithIdentity + ", Identity = " + identity + 
-				", Average identity" + averageIdentity();
+		return "Taxon ID = " + taxID + ", Parent ID = " + parentID + ", Child IDs = " + childIDs + ", Level = " + level
+				+ ", Nodes with identity = " + nodesWithIdentity +  ", votes = "+ votes + ", Identity = " + identity + 
+				", Average identity = " + averageIdentity();
 	}
 	
 //	/**
@@ -154,24 +154,24 @@ public class NCBITreeNode {
 //		return minChildName;
 //	}
 	
-	/**
-	 * Adds name and similarity to HashMap if flagged as higher than a parent or child similarity. 
-	 * 
-	 * @param orgName
-	 * @param sim
-	 */
-	public void flagRelation(String orgName, double sim) {
-		flaggedRelationships.put(orgName, sim);
-	}
-	
-	/**
-	 * Returns HashMap holding all flagged relationships (nodes with higher similarity than
-	 * this nodes parent or the lowest similarity child).
-	 * @return HashMap
-	 */
-	public HashMap<String, Double> getFlaggedRelations(){
-		return flaggedRelationships;
-	}
+//	/**
+//	 * Adds name and similarity to HashMap if flagged as higher than a parent or child similarity. 
+//	 * 
+//	 * @param orgName
+//	 * @param sim
+//	 */
+//	public void flagRelation(String orgName, double sim) {
+//		flaggedRelationships.put(orgName, sim);
+//	}
+//	
+//	/**
+//	 * Returns HashMap holding all flagged relationships (nodes with higher similarity than
+//	 * this nodes parent or the lowest similarity child).
+//	 * @return HashMap
+//	 */
+//	public HashMap<String, Double> getFlaggedRelations(){
+//		return flaggedRelationships;
+//	}
 	
 	/**
 	 * Add level value to node in the tree
@@ -185,16 +185,19 @@ public class NCBITreeNode {
 	 * Adds hierarchical levels to nodes recursively through the tree.
 	 * @param level_
 	 */
-	public void traverse(int level_) {
+	public void assignLevels(int level_, String parentRankName) {
 		
 		level = level_;
+		if(taxonomicRank == null || taxonomicRank.equalsIgnoreCase("no rank") || taxonomicRank.equalsIgnoreCase("clade")) {
+			taxonomicRank = parentRankName + ".1";
+		}
 		level_++;
 		
 		
 		for(NCBITreeNode childNode : childNodes) {
 			
 			if(childNode.taxID != taxID) {
-				childNode.traverse(level_);
+				childNode.assignLevels(level_, taxonomicRank);
 				
 			}
 			//childNode.traverse(level_);
@@ -223,17 +226,27 @@ public class NCBITreeNode {
 		else {return parentNode.isDescendantOf(nodeB);}
 	}
 	
-	
+	/**
+	 * Tests if the input node is an ancestor of this node.
+	 * Calls the isDescendantOf method on the input node
+	 * @param nodeB NCBITreeNode the node that might be an ancestor of this node.
+	 * @return boolean
+	 */
 	public boolean isAncestorOf(final NCBITreeNode nodeB) {
 		return nodeB.isDescendantOf(this);
 	}
 	
+	/**
+	 * Resets the identity, nodesWithIdentity and votes values for all descendant nodes
+	 * of this node.
+	 */
 	public void resetIdentity() {
 		identity = 0;
 		identitySum = 0;
 		nodesWithIdentity = 0;
 		sizeSum = 0;
 		votes = 0;
+		flaggedNode = false;
 		
 
 		for(NCBITreeNode childNode : childNodes) {
@@ -245,11 +258,11 @@ public class NCBITreeNode {
 		}
 	}
 	
-/**
- * Set nodes identity to the average identity of its descendants.
- * 
- * @param queryNode int ID of node relative to this node.
- */
+	/**
+	 * Set nodes identity to the average identity of its descendants.
+	 * 
+	 * @param queryNode int ID of node relative to this node.
+	 */
 	public void percolateIdentityUp(int queryNode) {
 
 		//If THIS nodes identity is greater than 0 (has an identity at all),
@@ -264,7 +277,7 @@ public class NCBITreeNode {
 
 			//If this node isn't a child of itself (handles the life or "0" node).
 			if(childNode.taxID != taxID) {
-				
+
 				//Calls percolateIdentityUp method recursively, pulling identities up to this node.
 				childNode.percolateIdentityUp(queryNode);
 
@@ -272,10 +285,11 @@ public class NCBITreeNode {
 				identitySum+=childNode.identitySum;
 				sizeSum+=childNode.sizeSum;
 				votes += childNode.votes;
-				
+
 			}
 		}
 	}
+	
 	
 	/**
 	 * Returns the average identity of all descendant nodes to this node.
@@ -307,16 +321,21 @@ public class NCBITreeNode {
 //		}
 //	}
 	
+	/**
+	 * Returns the current averageIdentity value of this node to its parent.
+	 * @return double
+	 */
 	public double parentSimilarity() {
 		return parentNode.averageIdentity();
+		//return parentNode.identity;
 	}
 	
 	/**
 	 * Method to call toDot method without requiring input.
 	 * @return StringBuilder from toDot.
 	 */
-	public StringBuilder toDot() {
-		return toDot(null);
+	public StringBuilder toDot(boolean printAllNodes_) {
+		return toDot(null, printAllNodes_);
 	}
 	
 	/**
@@ -324,7 +343,7 @@ public class NCBITreeNode {
 	 * @param sb StringBuilder.
 	 * @return StringBuilder with structure of tree in .dot format.
 	 */
-	public StringBuilder toDot(StringBuilder sb) {
+	public StringBuilder toDot(StringBuilder sb, boolean printAllNodes) {
 		
 		//If the input StringBuilder is null, start a new String Builder
 		if(sb==null) {sb = new StringBuilder();}
@@ -339,26 +358,30 @@ public class NCBITreeNode {
 			//First line of a .dot file.
 			sb.append("digraph g{\n");
 		} 
-		
-		//Node information for the .dot file.
-		sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\n"
-				+ "ID= " + String.format("%.2f", identity) +"\\n"
-				+ "Avg= " + String.format("%.2f", averageIdentity()) 
-				+ "\\n" + "Votes = " + votes + "\"]\n");
-		
-		//Iterate over child nodes and recursively call this method
-		//adding node connection to the StringBuilder.
-		for(NCBITreeNode childNode : childNodes) {
-			if(childNode != this) {
-				childNode.toDot(sb);
+
+
+		if(votes > 0 || printAllNodes) {//Node information for the .dot file.
+			sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\n"
+					+ "Taxon ID= " + taxID + "\\n"
+					+ "Tax Rank= " + taxonomicRank + "\\n"
+					+"ID= " + String.format("%.2f", identity) +"\\n"
+					+ "Avg= " + String.format("%.2f", averageIdentity()) 
+					+ "\\n" + "Votes = " + votes + "\"]\n");
+
+
+			//Iterate over child nodes and recursively call this method
+			//adding node connection to the StringBuilder.
+			for(NCBITreeNode childNode : childNodes) {
+				if(childNode != this) {
+					childNode.toDot(sb, printAllNodes);
+				}
+			}
+
+			//iterate over child nodes and add edge information to the StringBuilder.
+			for(NCBITreeNode childNode : childNodes) {
+				sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
 			}
 		}
-		
-		//iterate over child nodes and add edge information to the StringBuilder.
-		for(NCBITreeNode childNode : childNodes) {
-			sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
-		}
-		
 		//If first == true, append a final closing curly brace.
 		if(first) {
 			sb.append("}\n");
@@ -390,7 +413,7 @@ public class NCBITreeNode {
 	 * HashMap holding node names and similarities flagged as higher than similarities with
 	 * direct children.
 	 */
-	HashMap<String, Double> flaggedRelationships = new HashMap<>();
+	boolean flaggedNode = false;
 	
 	//Minimum similarity of all child nodes and this node.
 	//double minChildSim = 100;
@@ -465,4 +488,6 @@ public class NCBITreeNode {
 	long sizeSum = 0;
 	
 	int votes = 0;
+	
+	boolean printAllNodes;
 }
