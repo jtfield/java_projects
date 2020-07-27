@@ -240,19 +240,20 @@ public class NCBITreeNode {
 	 * Resets the identity, nodesWithIdentity and votes values for all descendant nodes
 	 * of this node.
 	 */
-	public void resetIdentity() {
+	public void resetRecursively() {
 		identity = 0;
 		identitySum = 0;
 		nodesWithIdentity = 0;
 		sizeSum = 0;
 		votes = 0;
 		flaggedNode = false;
+		color = "white";
 		
 
 		for(NCBITreeNode childNode : childNodes) {
 
 			if(childNode.taxID != taxID) {
-				childNode.resetIdentity();
+				childNode.resetRecursively();
 
 			}
 		}
@@ -361,10 +362,10 @@ public class NCBITreeNode {
 
 
 		if(votes > 0 || printAllNodes) {//Node information for the .dot file.
-			sb.append("\t" + nodeId + " [label=\" Node ID= " + nodeId +"\\n"
+			sb.append("\t" + nodeId + " [style=filled fillcolor=" + this.color + " label=\" Node ID= " + nodeId +"\\n"
 					+ "Taxon ID= " + taxID + "\\n"
 					+ "Tax Rank= " + taxonomicRank + "\\n"
-					+"ID= " + String.format("%.2f", identity) +"\\n"
+					+ "ID= " + String.format("%.2f", identity) +"\\n"
 					+ "Avg= " + String.format("%.2f", averageIdentity()) 
 					+ "\\n" + "Votes = " + votes + "\"]\n");
 
@@ -372,14 +373,16 @@ public class NCBITreeNode {
 			//Iterate over child nodes and recursively call this method
 			//adding node connection to the StringBuilder.
 			for(NCBITreeNode childNode : childNodes) {
-				if(childNode != this) {
+				if(childNode != this && (printAllNodes || childNode.votes > 0)) {
 					childNode.toDot(sb, printAllNodes);
 				}
 			}
 
 			//iterate over child nodes and add edge information to the StringBuilder.
 			for(NCBITreeNode childNode : childNodes) {
-				sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
+				if((printAllNodes || childNode.votes > 0)) {
+					sb.append("\t" + nodeId + " -> " + childNode.nodeId + "\n");
+				}
 			}
 		}
 		//If first == true, append a final closing curly brace.
@@ -490,4 +493,6 @@ public class NCBITreeNode {
 	int votes = 0;
 	
 	boolean printAllNodes;
+	
+	String color = "white";
 }

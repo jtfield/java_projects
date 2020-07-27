@@ -90,14 +90,19 @@ public class NCBISparseTreeValidate {
 			}else if(a.equals("tree")){
 				treeFileName=b;
 				
+			//Handle whether using NCBI files as input (default)
+			//or a test dataset.
 			}else if(a.equals("test")) {
 				test=true;
 				ncbi=false;
 				
+			//Handles which mode is used to assess problematic placements within the tree.
 			}else if(a.equals("mode")) {
-				if(b == "average"){mode=AVERAGE_IDENTITY_MODE;}
-				else if(b == "identity") {mode=IDENTITY_MODE;}
-				else if(b == "vote") {mode=VOTE_MODE;}
+				if(b.equals("average")){mode=AVERAGE_IDENTITY_MODE;}
+				else if(b.equals("identity")) {mode=IDENTITY_MODE;}
+				else if(b.equals("vote")) {mode=VOTE_MODE;}
+				else if(b.equals("both")) {mode=BOTH_MODE;}
+				else {assert false : "Unknown Mode: " + arg;}
 				
 			//Tells program to write tree graphs in .dot format.
 			}else if(a.equals("writetrees")) {
@@ -105,6 +110,9 @@ public class NCBISparseTreeValidate {
 				
 			}else if(a.equals("allnodes")) {
 				printAllNodes = true;
+				
+			}else if(a.equals("treestoprint")) {
+				goodTreesToPrint = badTreesToPrint = Integer.parseInt(b);
 	
 			//If writetrees is true and the path to an output dir is included
 			//set variable to the path to the desired directory
@@ -173,7 +181,7 @@ public class NCBISparseTreeValidate {
 		//Check similarities.
 		checkSimilarities(tree, matrix);
 		
-		//System.out.println(relationshipTree);
+		System.out.println("Node placement check complete.");
 		
 		
 		t.stop();
@@ -233,7 +241,8 @@ public class NCBISparseTreeValidate {
 
 			Integer keyTaxonID = keyNode.taxID;
 			
-			//System.out.println(keyTaxonID);
+			System.out.println("Analyzing Taxon ID :" + keyTaxonID);
+			
 			//If the organism isn't the life/0 node.
 			//NCBI taxon ID == 1.
 			//Node ID == 0.
@@ -241,10 +250,12 @@ public class NCBISparseTreeValidate {
 				
 				//Reset the identity values of the TreeNodes
 				//This is done so all identity values are relative to the current keyNode.
-				tree.root.resetIdentity();
+				tree.root.resetRecursively();
 				
 				//Set the identities of the tree based on the current keyNode.
 				tree.setIdentity(keyNode, matrix);
+				
+				keyNode.votes++;
 				
 				//Percolate the average identities of each node upwards through the tree
 				//relative to the current keyNode.
@@ -266,25 +277,81 @@ public class NCBISparseTreeValidate {
 					//assert false;
 				}
 				
-				if(mode==AVERAGE_IDENTITY_MODE) {checkSimilaritiesForOneNode(keyNode, matrix);}
+				if(mode==AVERAGE_IDENTITY_MODE) {
+					//checkSimilaritiesForOneNode(keyNode, matrix);
+					NCBITreeNode problemNode = checkAverageIdentityForOneNode(keyNode);
+
+					if(problemNode != null) {
+						System.out.println("Highest problem node for Taxon ID: " + keyNode.taxID + " is: " + problemNode);
+						if(badTreesToPrint > 0) {
+							writeTrees(keyNode, tree);
+							badTreesToPrint = badTreesToPrint - 1;
+						}
+					}else if(problemNode == null && goodTreesToPrint > 0) {
+						writeTrees(keyNode, tree);
+						goodTreesToPrint = goodTreesToPrint - 1;
+					}
+				}
 				else if(mode==VOTE_MODE) {
 					NCBITreeNode problemNode = checkVotesForOneNode(keyNode);
-					
-					if(problemNode != null) {System.out.println("Highest problem node for Taxon ID: " + keyNode.taxID + " is: " + problemNode);}
-					
-					}else { throw new RuntimeException("Uknown Mode" + mode);}
+
+					if(problemNode != null) {
+						System.out.println("Highest problem node for Taxon ID: " + keyNode.taxID + " is: " + problemNode);
+						if(badTreesToPrint > 0) {
+							writeTrees(keyNode, tree);
+							badTreesToPrint--;
+						}
+					}else if(problemNode == null && goodTreesToPrint > 0) {
+						writeTrees(keyNode, tree);
+						goodTreesToPrint--;
+					}
+
+				}else if(mode==BOTH_MODE) {
+					NCBITreeNode voteProblemNode = checkVotesForOneNode(keyNode);
+					if(voteProblemNode != null) {
+						NCBITreeNode avgIDProblemNode = checkAverageIdentityForOneNode(keyNode);
+
+						if(avgIDProblemNode != null) {
+
+							setNodeColors(keyNode, voteProblemNode, avgIDProblemNode);
+
+							System.out.println("Problem found at Taxon ID: " + keyNode.taxID 
+									+ " The highest vote problem node is: " + voteProblemNode 
+									+ " and the highest identity problem node is: " + avgIDProblemNode);
+
+							if(badTreesToPrint > 0) {
+								writeTrees(keyNode, tree);
+								badTreesToPrint--;
+							}
+						}else if(avgIDProblemNode == null) {
+							keyNode.color = "blue";
+							if(goodTreesToPrint > 0) {
+								writeTrees(keyNode, tree);
+								goodTreesToPrint--;
+							}
+						}
+					}
+				}else { throw new RuntimeException("Uknown Mode" + mode);}
 				//checkSimilaritiesForOneNode(keyNode, matrix);
-				
+
 			}
 		}
 	}
 
+	/**
+	 * Used to identify and flag suspicious placements of nodes within a taxonomic tree.
+	 * @param keyNode Query node of interest. Votes are calculated from this node in relation to the tree.
+	 * @return TreeNode the problematic node compared to the query node
+	 * 
+	 */
 	public NCBITreeNode checkVotesForOneNode(final NCBITreeNode keyNode) {
 		NCBITreeNode current=keyNode.parentNode;
 		
 		NCBITreeNode previous=keyNode;
 		
 		NCBITreeNode highestProblemNode = null;
+		
+		NCBITreeNode problemChild = null;
 		
 		while(current.parentNode != current) {
 			
@@ -307,16 +374,26 @@ public class NCBISparseTreeValidate {
 				current.flaggedNode = true;
 				System.out.println("Problem found at: [" + current.taxID + "] Taxon rank: [" + current.taxonomicRank + "]");
 				highestProblemNode = current;
+				problemChild = maxChild;
 			}
 			
 			previous = current;
 			current = current.parentNode;
 			
 		}
-		return highestProblemNode;
+		if(highestProblemNode != null && highestProblemNode != keyNode.parentNode) {
+			problemChild.color = "pink";
+		}
+		
+		return highestProblemNode == keyNode.parentNode ? null : highestProblemNode;
 	}
 	
-	
+	/**
+	 * Used to check sequence identities and flag suspicious node placements.
+	 * @param keyNode Query node of interest.
+	 * @param matrix Matrix of similarity comparisons.
+	 */
+	@Deprecated
 	public void checkSimilaritiesForOneNode(NCBITreeNode keyNode, NCBISparseSimilarityMatrix matrix) {
 		//Prevents analysis of "empty" nodes that don't contain sequences (genus/phylum/etc).
 		//TODO: if there are no sibling nodes, the parent sim could be 0.
@@ -342,6 +419,62 @@ public class NCBISparseTreeValidate {
 		}
 	}
 	
+	
+	public NCBITreeNode checkAverageIdentityForOneNode(final NCBITreeNode keyNode) {
+		NCBITreeNode current=keyNode.parentNode;
+		
+		NCBITreeNode previous=keyNode;
+		
+		NCBITreeNode highestProblemNode = null;
+		
+		NCBITreeNode problemChild = null;
+		
+		while(current.parentNode != current) {
+			
+			double currentMaxAverage = previous.averageIdentity();
+			NCBITreeNode maxChild = previous;
+			
+			for(NCBITreeNode descendantNode : current.childNodes) {
+				
+				if(descendantNode.averageIdentity() > currentMaxAverage) {
+					
+					currentMaxAverage = descendantNode.averageIdentity();
+					maxChild = descendantNode;
+					
+				}
+				
+			}
+			
+			if(maxChild != previous) {
+				
+				current.flaggedNode = true;
+				System.out.println("Problem found at: [" + current.taxID + "] Taxon rank: [" + current.taxonomicRank + "]");
+				highestProblemNode = current;
+				problemChild = maxChild;
+				
+			}
+			
+			previous = current;
+			current = current.parentNode;
+			
+		}
+		
+		if(highestProblemNode != null && highestProblemNode != keyNode.parentNode) {
+			problemChild.color = "yellow";
+		}
+		
+		return highestProblemNode == keyNode.parentNode ? null : highestProblemNode;
+	}
+	
+	
+	/**
+	 * Uses Similarity values to determine if the placement of a node is suspicious and requires investigation.
+	 * 
+	 * @param keyNode
+	 * @param matrixOrgNode
+	 * @param rowOrgComparison
+	 * @return
+	 */
 	public boolean isSuspicious(NCBITreeNode keyNode, NCBITreeNode matrixOrgNode, NCBIComparison rowOrgComparison) {
 		
 		if(!matrixOrgNode.isDescendantOf(keyNode.parentNode) && 
@@ -359,6 +492,12 @@ public class NCBISparseTreeValidate {
 
 		}
 		return false;
+	}
+	
+	public void setNodeColors(NCBITreeNode keyNode, NCBITreeNode voteProblemNode, NCBITreeNode avgIDProblemNode) {
+		keyNode.color = "blue";
+		voteProblemNode.color = "red";
+		avgIDProblemNode.color = "green";
 	}
 	
 	public void printSuspicious(NCBITreeNode keyNode, NCBIComparison rowOrgComparison, NCBITreeNode matrixOrgNode) {
@@ -429,6 +568,17 @@ public class NCBISparseTreeValidate {
 		}
 	}
 	
+	public void writeTrees(NCBITreeNode keyNode, NCBISparseTree tree) {
+		//Creates the tree output file name along with the path to the desired directory.
+		String currentTreeName = outpath + "SimilarityTree_" + keyNode.orgName + "_.dot";
+		
+		//Create the output file.
+		createFile(currentTreeName);
+
+		//Write the .dot formatted tree to the file.
+		writeToFile(currentTreeName, tree.root.toDot(printAllNodes));
+	}
+	
 	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
@@ -463,11 +613,15 @@ public class NCBISparseTreeValidate {
 	
 	private boolean ncbi=true;
 	
-	private int mode=VOTE_MODE;
+	private int mode=BOTH_MODE;
 	
 	private NCBISparseTree tree = null;
 	
 	private boolean printAllNodes = false;
+	
+	private int goodTreesToPrint=0;
+	
+	private int badTreesToPrint=0;
 	
 	/*--------------------------------------------------------------*/
 	
@@ -483,6 +637,7 @@ public class NCBISparseTreeValidate {
 	public static final int VOTE_MODE=0;
 	public static final int IDENTITY_MODE=1;
 	public static final int AVERAGE_IDENTITY_MODE=2;
+	public static final int BOTH_MODE=3;
 	
 	
 	/*--------------------------------------------------------------*/
