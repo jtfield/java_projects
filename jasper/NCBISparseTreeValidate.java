@@ -306,9 +306,13 @@ public class NCBISparseTreeValidate {
 						goodTreesToPrint--;
 					}
 
+				//The primary mode
 				}else if(mode==BOTH_MODE) {
+					
 					NCBITreeNode voteProblemNode = checkVotesForOneNode(keyNode);
+					
 					if(voteProblemNode != null) {
+					
 						NCBITreeNode avgIDProblemNode = checkAverageIdentityForOneNode(keyNode);
 
 						if(avgIDProblemNode != null) {
@@ -345,6 +349,7 @@ public class NCBISparseTreeValidate {
 	 * 
 	 */
 	public NCBITreeNode checkVotesForOneNode(final NCBITreeNode keyNode) {
+		
 		NCBITreeNode current=keyNode.parentNode;
 		
 		NCBITreeNode previous=keyNode;
@@ -356,6 +361,7 @@ public class NCBISparseTreeValidate {
 		while(current.parentNode != current) {
 			
 			int currentMaxVotes = previous.votes;
+			
 			NCBITreeNode maxChild = previous;
 			
 			for(NCBITreeNode descendantNode : current.childNodes) {
